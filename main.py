@@ -60,7 +60,6 @@ class Player(pg.sprite.Sprite):
         self.rect = self.image.get_rect(center=screen.get_rect().center)
         self.time = time.time()
         
-    
     def _animate(self, anim):
         self.elapsed = time.time() - self.time
         if self.elapsed > self.ANIM_SPEED:
@@ -74,33 +73,26 @@ class Player(pg.sprite.Sprite):
         keys = pg.key.get_pressed()
         self.dx = 0
         self.dy = 0
+
         if keys[pg.K_w]:
             self.dy = -self.speed
             self._animate(self.walk_up)
             self.rect.move_ip(0, self.dy)
         if keys[pg.K_s]:
             self.dy = self.speed
-            self.walking = True
             self._animate(self.walk_down)
             self.rect.move_ip(0, self.dy)
         if keys[pg.K_a]:
             self.dx = -self.speed
-            self.walking = True
             self._animate(self.walk_left)
             self.rect.move_ip(self.dx, 0)
         if keys[pg.K_d]:
             self.dx = self.speed
-            self.walking = True
             self._animate(self.walk_right)
             self.rect.move_ip(self.dx, 0)
 
     def update(self):
         self._move()
-
-# if even gridwidth, screen center is bottomright 
-#   of (gw // 2 - 1, gw // 2 - 1) grid
-# if odd gridwidth screen center is center
-#   of (gr // 2, gr // 2)
 
 class Tile(pg.sprite.Sprite):
     def __init__(self, image, *groups):
@@ -116,8 +108,8 @@ class Kitchen(pg.sprite.Group):
         'o': pg.image.load(IMAGE_DIR / 'oven.png')
     }
 
-    def __init__(self, appliance_group, *sprites):
-        super().__init__(*sprites)
+    def __init__(self, appliance_group):
+        super().__init__()
         self.screen = pg.display.get_surface()
 
         with open(ROOT_DIR / 'map1', 'r', encoding='utf-8') as infile:
@@ -136,10 +128,9 @@ class Kitchen(pg.sprite.Group):
                              - (TILESIZE // 2))
 
         self.appliance_group = appliance_group
-        self.read_tilemap(self.tilemap)       
-        print(self.tilemap)
+        self.read_tilemap(self.tilemap, all_sprites)       
 
-    def read_tilemap(self, tilemap):
+    def read_tilemap(self, tilemap, all_sprites):
         for i, row in enumerate(tilemap):
             for j, tile in enumerate(row):
                 new_tile = Tile(self.TILE_DICT[tile])
@@ -150,47 +141,31 @@ class Kitchen(pg.sprite.Group):
                     TILESIZE
                 )
                 self.add(new_tile)
+                all_sprites.add(new_tile)
                 if tile != '#':
                     self.appliance_group.add(new_tile)
 
 
-appliances = pg.sprite.Group()
+background = pg.image.load(IMAGE_DIR / 'background.png')
+
+all_sprites = pg.sprite.Group()
 players = pg.sprite.Group()
+appliances = pg.sprite.Group()
 kitchen = Kitchen(appliances)
-all_sprites = pg.sprite.Group(*kitchen.sprites())
+
 player = Player(all_sprites, players)
-print(appliances)
+
 running = True
 while running:
     for event in pg.event.get():
         if event.type == pg.QUIT:
             running = False
-    
-    screen.blit(pg.image.load(IMAGE_DIR / 'background.png'))
-    
-    for sprite in appliances.sprites():
-        if player.rect.colliderect(sprite.rect):
-            if (player.rect.left < sprite.rect.right
-                and player.rect.bottom > sprite.rect.top
-                and player.rect.top < sprite.rect.bottom):
-                player.rect.right = sprite.rect.left
-            # if player.dx > 0 and player.rect.right < sprite.rect.left:
-            #     player.rect.right = sprite.rect.left
-            # elif player.dx < 0 and player.rect.left < sprite.rect.right:
-            #     player.rect.left = sprite.rect.right
-            # elif player.dy > 0 and player.rect.bottom > sprite.rect.top:
-            #     player.rect.bottom = sprite.rect.top
-            # elif player.dy < 0 and sprite.rect.top < sprite.rect.bottom:
-            #     player.rect.top = sprite.rect.bottom
-            
 
-    print(f'dx: {player.dx}')
-    print(f'dy: {player.dy}')
-
+    screen.blit(background)
     all_sprites.draw(screen)
     all_sprites.update()
 
-    pg.display.update()
+    pg.display.flip()
     clock.tick(60)
 
 pg.quit()
