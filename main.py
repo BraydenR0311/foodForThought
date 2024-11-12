@@ -74,6 +74,8 @@ class Player(pg.sprite.Sprite):
         self.dx = 0
         self.dy = 0
 
+        
+        
         if keys[pg.K_w]:
             self.dy = -self.speed
             self._animate(self.walk_up)
@@ -82,6 +84,14 @@ class Player(pg.sprite.Sprite):
             self.dy = self.speed
             self._animate(self.walk_down)
             self.rect.move_ip(0, self.dy)
+        
+        hitlist = pg.sprite.spritecollide(self, appliances, False)
+        for sprite in hitlist:
+            if self.dy > 0:
+                player.rect.bottom = sprite.rect.top
+            elif self.dy < 0:
+                player.rect.top = sprite.rect.bottom
+
         if keys[pg.K_a]:
             self.dx = -self.speed
             self._animate(self.walk_left)
@@ -90,6 +100,13 @@ class Player(pg.sprite.Sprite):
             self.dx = self.speed
             self._animate(self.walk_right)
             self.rect.move_ip(self.dx, 0)
+
+        hitlist = pg.sprite.spritecollide(self, appliances, False)
+        for sprite in hitlist:
+            if self.dx > 0:
+                player.rect.right = sprite.rect.left 
+            elif self.dx < 0:
+                player.rect.left = sprite.rect.right
 
     def update(self):
         self._move()
