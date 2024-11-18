@@ -1,111 +1,69 @@
 import time
+from abc import ABC
 import pygame as pg
+
 from paths import *
 from constants import *
+from src.services import load_image
 
-class Kitchen(pg.sprite.Group):
-
-    TILE_DICT = {
-        '#': pg.image.load(IMAGE_DIR / 'floor.png'),
-        'x': pg.image.load(IMAGE_DIR / 'floor.png'),
-        'f': pg.image.load(IMAGE_DIR / 'fryer.png'),
-        'p': pg.image.load(IMAGE_DIR / 'pantry.png'),
-        'o': pg.image.load(IMAGE_DIR / 'oven.png')
-    }
-
-    def __init__(self, appliance_group):
-        super().__init__()
-        self.screen = pg.display.get_surface()
-
-        with open(ROOT_DIR / 'map1', 'r', encoding='utf-8') as infile:
-            self.tilemap = infile.read().splitlines()
-
-        self.gridwidth = len(self.tilemap[0])
-        if self.gridwidth % 2 == 0:
-            self.topleftx = self.screen.get_rect().centerx - (self.gridwidth // 2 * TILESIZE)
-            self.toplefty = self.screen.get_rect().centery - (self.gridwidth // 2 * TILESIZE)
-        else:
-            self.topleftx = (self.screen.get_rect().centerx
-                             - (self.gridwidth // 2 * TILESIZE)
-                             - (TILESIZE // 2))
-            self.toplefty = (self.screen.get_rect().centery
-                             - (self.gridwidth // 2 * TILESIZE)
-                             - (TILESIZE // 2))
-
-        self.appliance_group = appliance_group
-        self.read_tilemap(self.tilemap)
-        self.rect = pg.Rect(*self.sprites()[0].rect.topleft, self.gridwidth * TILESIZE, self.gridwidth * TILESIZE)
-
-    def read_tilemap(self, tilemap):
-        for i, row in enumerate(tilemap):
-            for j, tile in enumerate(row):
-                new_tile = Tile(self.TILE_DICT[tile])
-                new_tile.player_group = self.player_group
-                new_tile.tile = tile
-                new_tile.rect = pg.Rect(
-                    self.topleftx + (j * TILESIZE),
-                    self.toplefty + (i * TILESIZE),
-                    TILESIZE,
-                    TILESIZE
-                )
-                self.add(new_tile)
-                if tile != '#':
-                    self.appliance_group.add(new_tile)
+# Every sprite must have a 'containers' class variable.
+# TODO: should images be stored outside of class,
+#   so all in one place?
 
 class Player(pg.sprite.Sprite):
 
-    up = pg.image.load(IMAGE_DIR / 'chef' / 'chef1.png')
+    up_still = pg.image.load(IMAGE_DIR / 'chef' / 'chef1.png')
 
-    down = pg.transform.rotate(up, 180)
+    down_still = pg.transform.rotate(up_still, 180)
 
-    left = pg.transform.rotate(up, 90)
+    left_still = pg.transform.rotate(up_still, 90)
 
-    right = pg.transform.rotate(up, 270)
+    right_still = pg.transform.rotate(up_still, 270)
 
     walk_up = [
         pg.image.load(IMAGE_DIR / 'chef' / 'chef2.png'),
-        up,
+        up_still,
         pg.image.load(IMAGE_DIR / 'chef' / 'chef3.png'),
-        up
+        up_still
     ]
 
     walk_down = [
         pg.transform.rotate(walk_up[0], 180),
-        down,
+        down_still,
         pg.transform.rotate(walk_up[2], 180),
-        down
+        down_still
     ]
 
     walk_left = [
         pg.transform.rotate(walk_up[0], 90),
-        left,
+        left_still,
         pg.transform.rotate(walk_up[2], 90),
-        left
+        left_still
     ]
 
     walk_right = [
         pg.transform.rotate(walk_up[0], 270),
-        right,
+        right_still,
         pg.transform.rotate(walk_up[2], 270),
-        right
+        right_still
     ]
 
     ANIM_SPEED = 0.2
 
-    def __init__(self, collide_group, kitchen):
-        super().__init__()
-        self.collide_group = collide_group
-        self.kitchen = kitchen
+    containers = None
+
+    def __init__(self):
+        super().__init__(self.containers)
         self.index = 0
         self.screen = pg.display.get_surface()
         self.speed = 2
         self.dx = 0
         self.dy = 0
-        self.image = self.up
+        self.image = self.up_still
         self.rect = self.image.get_rect(center=self.screen.get_rect().center)
         self.time = time.time()
         
-    def _animate(self, anim):
+    def animate(self, anim):
         self.elapsed = time.time() - self.time
         if self.elapsed > self.ANIM_SPEED:
             if self.index == len(anim):
@@ -114,75 +72,114 @@ class Player(pg.sprite.Sprite):
             self.time = time.time()
             self.index += 1
 
-    def _move(self):
-        keys = pg.key.get_pressed()
-        self.dx = 0
-        self.dy = 0
-        if keys[pg.K_LSHIFT]:
-            self.speed = 4
-        else:
-            self.speed = 2
-        
-        
-        if keys[pg.K_w]:
-            self.dy = -self.speed
-            self._animate(self.walk_up)
-            self.rect.move_ip(0, self.dy)
-        if keys[pg.K_s]:
-            self.dy = self.speed
-            self._animate(self.walk_down)
-            self.rect.move_ip(0, self.dy)
-        
-        hitlist = pg.sprite.spritecollide(self, self.collide_group, False)
-        for sprite in hitlist:
-            if self.dy > 0:
-                self.rect.bottom = sprite.rect.top
-            elif self.dy < 0:
-                self.rect.top = sprite.rect.bottom
-
-        if keys[pg.K_a]:
-            self.dx = -self.speed
-            self._animate(self.walk_left)
-            self.rect.move_ip(self.dx, 0)
-        if keys[pg.K_d]:
-            self.dx = self.speed
-            self._animate(self.walk_right)
-            self.rect.move_ip(self.dx, 0)
-
-        hitlist = pg.sprite.spritecollide(self, self.collide_group, False)
-        for sprite in hitlist:
-            if self.dx > 0:
-                self.rect.right = sprite.rect.left 
-            elif self.dx < 0:
-                self.rect.left = sprite.rect.right
-
     def update(self):
-        self._move()
-        self.rect = self.rect.clamp(self.kitchen.rect)
+        pass
+        
+# Only inherited from.
+class Tile(ABC):
 
-class Tile(pg.sprite.Sprite):
-    def __init__(self, image):
+    TILE_IMAGES = {
+        '#': load_image(IMAGE_DIR / 'floor.png'),
+        'x': load_image(IMAGE_DIR / 'floor.png'),
+        'f': load_image(IMAGE_DIR / 'fryer.png'),
+        'p': load_image(IMAGE_DIR / 'pantry.png'),
+        'o': load_image(IMAGE_DIR / 'oven.png')
+    }
+
+    containers = None
+
+    def __init__(self, tile_type):
         super().__init__()
-        self.tile = None
-        self.player_group = None
-        self.image = image
-        self.rect = self.image.get_rect()
-        self.hitbox = self.rect.inflate(20, 20)
-        self.text = Text('foo',
-                         ASSET_DIR / 'fonts' / 'pixel.ttf',
-                         10,
-                         'black')
+        self.tile_type = tile_type
+        self.image, self.rect = self.TILE_IMAGES[self.tile_type]
+        if self.containers == None:
+            raise ValueError('Must define groups for this class.')
+        self.add(self.containers)
+
+class Floor(Tile, pg.sprite.Sprite):
+    def __init__(self, tile_type):
+        super().__init__(tile_type)
+
+class Appliance(Tile, pg.sprite.Sprite):
+    def __init__(self, tile_type):
+        super().__init__(tile_type)
     
-    def update(self):
-        if self.tile == 'p':
-            if self.hitbox.colliderect(self.player_group):
-                print('foo')
 class Text(pg.sprite.Sprite):
-    def __init__(self, text, font, fontsize, color):
-        super().__init__()
+
+    containers = None
+
+    def __init__(self, text, font, fontsize, color, bgcolor=None):
+        super().__init__(self.containers)
         self.text = text
         self.font = pg.font.Font(font, fontsize)
         self.color = color
-        self.image = self.font.render(self.text, 1, self.color)
+        self.bgcolor = bgcolor
+        self.image = self.font.render(self.text, 1, self.color, self.bgcolor)
         self.rect = self.image.get_rect()
         self.offset = (0, -20)
+
+class Button(pg.sprite.Sprite):
+
+    IMAGES = {'play': load_image(IMAGE_DIR / 'buttons' / 'play.png'),
+              'play_armed': load_image(IMAGE_DIR / 'buttons' / 'play_armed.png'),
+              'play_clicked': load_image(IMAGE_DIR / 'buttons' / 'play_clicked.png')}
+
+    containers = None
+
+    def __init__(self, button_type: str):
+        super().__init__(self.containers)
+        self.button_type = button_type
+        self.image, self.rect = self.IMAGES[self.button_type]
+        self.rect = self.align_rect()
+        self.clicked = False
+
+    def align_rect(self) -> pg.Rect:
+        rect = self.image.get_rect()
+        rect.center = SCREEN_RECT.center
+
+        distance = 150
+        if self.button_type == 'play':
+            rect.move_ip(0, -distance)
+        if self.button_type == 'quit':
+            rect.move_ip(0, distance)
+    
+        return rect
+    
+    def change_image(self, image: str):
+        self.image = self.images[image]
+
+def read_tilemap(path) -> pg.Rect:
+    with open(path, 'r', encoding='utf-8') as infile:
+            tilemap = infile.read().splitlines()
+
+    gridwidth = len(tilemap[0])
+    if gridwidth % 2 == 0:
+        topleftx = (SCREEN_RECT.centerx
+                    - (gridwidth // 2 * TILESIZE))
+        toplefty = (SCREEN_RECT.centery
+                    - (gridwidth // 2 * TILESIZE))
+    else:
+        topleftx = (SCREEN_RECT.centerx
+                    - (gridwidth // 2 * TILESIZE)
+                    - (TILESIZE // 2))
+        toplefty = (SCREEN_RECT.centery
+                    - (gridwidth // 2 * TILESIZE)
+                    - (TILESIZE // 2))
+
+    for i, row in enumerate(tilemap):
+        for j, tile in enumerate(row):
+            if tile == '#':
+                newtile = Floor(tile)
+            else:
+                newtile = Appliance(tile)
+            newtile.rect = pg.Rect(topleftx + j*TILESIZE,
+                                    toplefty + i*TILESIZE,
+                                    TILESIZE,
+                                    TILESIZE)
+            
+    kitchen_rect = pg.Rect(topleftx,
+                            toplefty,
+                            gridwidth * TILESIZE,
+                            gridwidth * TILESIZE)
+
+    return kitchen_rect
