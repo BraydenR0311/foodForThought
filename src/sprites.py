@@ -62,6 +62,7 @@ class Player(pg.sprite.Sprite):
         self.image = self.up_still
         self.rect = self.image.get_rect(center=self.screen.get_rect().center)
         self.time = time.time()
+        self.inventory = []
         
     def animate(self, anim):
         self.elapsed = time.time() - self.time
@@ -103,7 +104,22 @@ class Floor(Tile, pg.sprite.Sprite):
 class Appliance(Tile, pg.sprite.Sprite):
     def __init__(self, tile_type):
         super().__init__(tile_type)
-    
+        self.zone = None    # Replaced in read_tilemap.
+        self.popup = False
+
+class Popup(pg.sprite.Sprite):
+
+    image = load_image(IMAGE_DIR / 'e_hint.png')
+
+    containers = None
+
+    def __init__(self, appliance):
+        super().__init__(self.containers)
+        self.appliance = appliance
+        self.image, self.rect = self.image
+        self.rect.center = self.appliance.rect.center
+        self.rect.move_ip(0, -25)
+
 class Text(pg.sprite.Sprite):
 
     containers = None
@@ -176,6 +192,7 @@ def read_tilemap(path) -> pg.Rect:
                                     toplefty + i*TILESIZE,
                                     TILESIZE,
                                     TILESIZE)
+            newtile.zone = newtile.rect.inflate(50, 50)
             
     kitchen_rect = pg.Rect(topleftx,
                             toplefty,

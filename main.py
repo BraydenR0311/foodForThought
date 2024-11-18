@@ -10,6 +10,7 @@ from src.sprites import (
     Floor,
     Player,
     Button,
+    Popup,
     read_tilemap,
 )
 
@@ -25,21 +26,19 @@ all_sprites = pg.sprite.Group()
 appliances = pg.sprite.Group()
 buttons = pg.sprite.Group()
 kitchen = pg.sprite.Group()
-close_to_player = pg.sprite.Group()
+popups = pg.sprite.Group()
 
 # Assign sprite classes to certain groups.
 Player.containers = all_sprites
 Floor.containers = kitchen, all_sprites
 Appliance.containers = appliances, kitchen, all_sprites
 Button.containers = buttons
+Popup.containers = popups, all_sprites
 
 # Initialize objects.
 kitchen_rect = read_tilemap('map1')
 player = Player()
 play = Button('play')
-
-# TODO
-print(appliances)
 
 running = True
 while running:
@@ -127,16 +126,23 @@ while running:
             elif player.dx < 0:
                 player.rect.left = sprite.rect.right
 
-        # Player boundaries
+        # Keep chef in the kitchen.
         player.rect.clamp_ip(kitchen_rect)
 
-        # # Check if player near pantry
-        # for tile in kitchen.sprites():
-        #     if tile.type == 'p':
-        #         if tile.hitbox.colliderect(player.rect):
-                    
+        # Player next to pantry
+        # TODO: must have a popup object assigned to an appliance
+        for appliance in appliances:
+            if (appliance.zone.colliderect(player)
+                and not appliance.popup):
+                appliance.popup = not appliance.popup
+                Popup(appliance)
+                print(len(popups))
+            elif (not appliance.zone.colliderect(player)
+                  and appliance.popup):
+                appliance.popup = not appliance.popup
 
     pg.display.flip()
     clock.tick(60)
 
 pg.quit()
+
