@@ -12,7 +12,11 @@ from src.sprites import (
     Button,
     Popup,
     read_tilemap,
+    # TEST
+    Foo
 )
+
+# TODO: remove tests and dont use load_image function.
 
 pg.init()
 screen = pg.display.set_mode((WIDTH, HEIGHT))
@@ -34,6 +38,8 @@ Floor.containers = kitchen, all_sprites
 Appliance.containers = appliances, kitchen, all_sprites
 Button.containers = buttons
 Popup.containers = popups, all_sprites
+# TEST
+Foo.containers = popups, all_sprites
 
 # Initialize objects.
 kitchen_rect = read_tilemap('map1')
@@ -85,6 +91,7 @@ while running:
 
 
     elif global_state == Gamestate.PLAYING:
+
         # Draw objects
         SCREEN.blit(background)
         all_sprites.draw(SCREEN)
@@ -131,16 +138,11 @@ while running:
 
         # Player next to pantry
         # TODO: must have a popup object assigned to an appliance
-        for appliance in appliances:
-            if (appliance.zone.colliderect(player)
-                and not appliance.popup):
-                appliance.popup = not appliance.popup
-                Popup(appliance)
-                print(len(popups))
-            elif (not appliance.zone.colliderect(player)
-                  and appliance.popup):
-                appliance.popup = not appliance.popup
-
+        # for appliance in appliances:
+        #     if appliance.zone.colliderect(player):
+        
+        for appliance in appliances.sprites():
+            print(appliance.popup.rect)
     pg.display.flip()
     clock.tick(60)
 

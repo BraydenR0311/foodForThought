@@ -89,36 +89,52 @@ class Tile(ABC):
 
     containers = None
 
-    def __init__(self, tile_type):
+    def __init__(self, tile_type: str, rect: pg.Rect):
         super().__init__()
         self.tile_type = tile_type
-        self.image, self.rect = self.TILE_IMAGES[self.tile_type]
+        # Will overwrite this rect immediately.
+        self.image, _ = self.TILE_IMAGES[self.tile_type]
+        self.rect = rect
         if self.containers == None:
             raise ValueError('Must define groups for this class.')
         self.add(self.containers)
 
 class Floor(Tile, pg.sprite.Sprite):
-    def __init__(self, tile_type):
-        super().__init__(tile_type)
+    def __init__(self, tile_type, rect):
+        super().__init__(tile_type, rect)
 
 class Appliance(Tile, pg.sprite.Sprite):
-    def __init__(self, tile_type):
-        super().__init__(tile_type)
-        self.zone = None    # Replaced in read_tilemap.
-        self.popup = False
-
+    def __init__(self, tile_type, rect):
+        super().__init__(tile_type, rect)
+        self.zone = self.rect.inflate(70, 70)
+        self.popup = Foo(self.rect.center)
 class Popup(pg.sprite.Sprite):
 
     image = load_image(IMAGE_DIR / 'e_hint.png')
 
     containers = None
 
-    def __init__(self, appliance):
+    def __init__(self, center):
         super().__init__(self.containers)
-        self.appliance = appliance
         self.image, self.rect = self.image
-        self.rect.center = self.appliance.rect.center
-        self.rect.move_ip(0, -25)
+        self.rect.center = center
+
+        # self.rect.move_ip(0, -50)
+
+
+# TEST
+class Foo(pg.sprite.Sprite):
+
+    image = pg.image.load(IMAGE_DIR / 'e_hint.png')
+
+    containers = None
+
+    def __init__(self, center):
+        super().__init__()
+        self.image = Foo.image
+        self.rect = self.image.get_rect()
+
+        self.rect.center = center
 
 class Text(pg.sprite.Sprite):
 
@@ -181,18 +197,24 @@ def read_tilemap(path) -> pg.Rect:
         toplefty = (SCREEN_RECT.centery
                     - (gridwidth // 2 * TILESIZE)
                     - (TILESIZE // 2))
-
+    # TEST
+    group = pg.sprite.Group()
     for i, row in enumerate(tilemap):
         for j, tile in enumerate(row):
+            rect = pg.Rect(topleftx + j*TILESIZE,
+                           toplefty + i*TILESIZE,
+                           TILESIZE,
+                           TILESIZE)
             if tile == '#':
-                newtile = Floor(tile)
+                Floor(tile, rect)
             else:
-                newtile = Appliance(tile)
-            newtile.rect = pg.Rect(topleftx + j*TILESIZE,
-                                    toplefty + i*TILESIZE,
-                                    TILESIZE,
-                                    TILESIZE)
-            newtile.zone = newtile.rect.inflate(50, 50)
+                Appliance(tile, rect).add(group)
+                print(len(group))
+                for sprite in group.sprites():
+                    print(sprite.popup.rect.center)
+               
+
+
             
     kitchen_rect = pg.Rect(topleftx,
                             toplefty,
