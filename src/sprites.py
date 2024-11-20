@@ -1,10 +1,10 @@
 import time
+from math import sin
 from abc import ABC
 import pygame as pg
 
 from paths import *
 from constants import *
-from src.services import load_image
 
 # Every sprite must have a 'containers' class variable.
 # TODO: should images be stored outside of class,
@@ -72,19 +72,16 @@ class Player(pg.sprite.Sprite):
             self.image = anim[self.index]
             self.time = time.time()
             self.index += 1
-
-    def update(self):
-        pass
         
 # Only inherited from.
 class Tile(ABC):
 
     TILE_IMAGES = {
-        '#': load_image(IMAGE_DIR / 'floor.png'),
-        'x': load_image(IMAGE_DIR / 'floor.png'),
-        'f': load_image(IMAGE_DIR / 'fryer.png'),
-        'p': load_image(IMAGE_DIR / 'pantry.png'),
-        'o': load_image(IMAGE_DIR / 'oven.png')
+        '#': pg.image.load(IMAGE_DIR / 'floor.png'),
+        'x': pg.image.load(IMAGE_DIR / 'floor.png'),
+        'f': pg.image.load(IMAGE_DIR / 'fryer.png'),
+        'p': pg.image.load(IMAGE_DIR / 'pantry.png'),
+        'o': pg.image.load(IMAGE_DIR / 'oven.png')
     }
 
     containers = None
@@ -93,7 +90,7 @@ class Tile(ABC):
         super().__init__()
         self.tile_type = tile_type
         # Will overwrite this rect immediately.
-        self.image, _ = self.TILE_IMAGES[self.tile_type]
+        self.image = self.TILE_IMAGES[self.tile_type]
         self.rect = rect
         if self.containers == None:
             raise ValueError('Must define groups for this class.')
@@ -107,34 +104,22 @@ class Appliance(Tile, pg.sprite.Sprite):
     def __init__(self, tile_type, rect):
         super().__init__(tile_type, rect)
         self.zone = self.rect.inflate(70, 70)
-        self.popup = Foo(self.rect.center)
+        self.popup = Popup(self.rect.center)
+
 class Popup(pg.sprite.Sprite):
 
-    image = load_image(IMAGE_DIR / 'e_hint.png')
+    IMAGE = pg.image.load(IMAGE_DIR / 'e_hint.png')
 
     containers = None
 
     def __init__(self, center):
         super().__init__(self.containers)
-        self.image, self.rect = self.image
-        self.rect.center = center
+        self.image = self.IMAGE
+        self.rect = self.image.get_rect(midbottom=center)
+        self.rect.move_ip(0, -25)
 
-        # self.rect.move_ip(0, -50)
-
-
-# TEST
-class Foo(pg.sprite.Sprite):
-
-    image = pg.image.load(IMAGE_DIR / 'e_hint.png')
-
-    containers = None
-
-    def __init__(self, center):
-        super().__init__()
-        self.image = Foo.image
-        self.rect = self.image.get_rect()
-
-        self.rect.center = center
+    def update(self):
+        pass
 
 class Text(pg.sprite.Sprite):
 
@@ -152,16 +137,16 @@ class Text(pg.sprite.Sprite):
 
 class Button(pg.sprite.Sprite):
 
-    IMAGES = {'play': load_image(IMAGE_DIR / 'buttons' / 'play.png'),
-              'play_armed': load_image(IMAGE_DIR / 'buttons' / 'play_armed.png'),
-              'play_clicked': load_image(IMAGE_DIR / 'buttons' / 'play_clicked.png')}
+    IMAGES = {'play': pg.image.load(IMAGE_DIR / 'buttons' / 'play.png'),
+              'play_armed': pg.image.load(IMAGE_DIR / 'buttons' / 'play_armed.png'),
+              'play_clicked': pg.image.load(IMAGE_DIR / 'buttons' / 'play_clicked.png')}
 
     containers = None
 
     def __init__(self, button_type: str):
         super().__init__(self.containers)
         self.button_type = button_type
-        self.image, self.rect = self.IMAGES[self.button_type]
+        self.image = self.IMAGES[self.button_type]
         self.rect = self.align_rect()
         self.clicked = False
 
@@ -197,8 +182,7 @@ def read_tilemap(path) -> pg.Rect:
         toplefty = (SCREEN_RECT.centery
                     - (gridwidth // 2 * TILESIZE)
                     - (TILESIZE // 2))
-    # TEST
-    group = pg.sprite.Group()
+
     for i, row in enumerate(tilemap):
         for j, tile in enumerate(row):
             rect = pg.Rect(topleftx + j*TILESIZE,
@@ -208,14 +192,8 @@ def read_tilemap(path) -> pg.Rect:
             if tile == '#':
                 Floor(tile, rect)
             else:
-                Appliance(tile, rect).add(group)
-                print(len(group))
-                for sprite in group.sprites():
-                    print(sprite.popup.rect.center)
-               
+                Appliance(tile, rect)
 
-
-            
     kitchen_rect = pg.Rect(topleftx,
                             toplefty,
                             gridwidth * TILESIZE,

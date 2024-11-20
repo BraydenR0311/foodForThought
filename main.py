@@ -12,11 +12,7 @@ from src.sprites import (
     Button,
     Popup,
     read_tilemap,
-    # TEST
-    Foo
 )
-
-# TODO: remove tests and dont use load_image function.
 
 pg.init()
 screen = pg.display.set_mode((WIDTH, HEIGHT))
@@ -27,19 +23,19 @@ background, _ = load_image(IMAGE_DIR / 'background.png')
 
 # Create groups.
 all_sprites = pg.sprite.Group()
+players = pg.sprite.Group()
 appliances = pg.sprite.Group()
 buttons = pg.sprite.Group()
 kitchen = pg.sprite.Group()
 popups = pg.sprite.Group()
 
 # Assign sprite classes to certain groups.
-Player.containers = all_sprites
+Player.containers = players, all_sprites
 Floor.containers = kitchen, all_sprites
 Appliance.containers = appliances, kitchen, all_sprites
 Button.containers = buttons
 Popup.containers = popups, all_sprites
-# TEST
-Foo.containers = popups, all_sprites
+
 
 # Initialize objects.
 kitchen_rect = read_tilemap('map1')
@@ -94,7 +90,12 @@ while running:
 
         # Draw objects
         SCREEN.blit(background)
-        all_sprites.draw(SCREEN)
+        
+        kitchen.draw(screen)
+        players.draw(screen)
+        popups.draw(screen)
+
+
         all_sprites.update()
 
         # Move sprite, checking for collisions
@@ -140,11 +141,10 @@ while running:
         # TODO: must have a popup object assigned to an appliance
         # for appliance in appliances:
         #     if appliance.zone.colliderect(player):
-        
-        for appliance in appliances.sprites():
-            print(appliance.popup.rect)
+       
     pg.display.flip()
     clock.tick(60)
+    print(pg.time.get_ticks())
 
 pg.quit()
 
