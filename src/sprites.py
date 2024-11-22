@@ -63,7 +63,10 @@ class Player(pg.sprite.Sprite):
         self.rect = self.image.get_rect(center=self.screen.get_rect().center)
         self.time = time.time()
         self.inventory = []
-        
+
+    def update(self):
+        self.center_vec = pg.math.Vector2(*self.rect.center)
+
     def animate(self, anim):
         self.elapsed = time.time() - self.time
         if self.elapsed > self.ANIM_SPEED:
@@ -101,10 +104,52 @@ class Floor(Tile, pg.sprite.Sprite):
         super().__init__(tile_type, rect)
 
 class Appliance(Tile, pg.sprite.Sprite):
+
     def __init__(self, tile_type, rect):
         super().__init__(tile_type, rect)
         self.zone = self.rect.inflate(70, 70)
         self.popup = Popup(self.rect.center)
+        self.center_vec = pg.math.Vector2(*self.rect.center)
+        self.inventory = []
+        self.interacted = False
+    
+    def interact(self, actor, interaction):
+        if not self.interacted and interaction:
+            self.interacted = not self.interacted
+            if self.tile_type == 'p':
+                if self.inventory:
+                    item = self.inventory.pop()
+                    actor.inventory.append(item)
+                    print(f'Added to inventory: {item.kind}')
+                    print(actor.inventory)
+
+        elif self.interacted and not interaction:
+            self.interacted = not self.interacted
+            
+class Ingredient(pg.sprite.Sprite):
+
+    IMAGE_DICT = {'cheese': pg.image.load(IMAGE_DIR
+                                          / 'burger'
+                                          / 'cheese.png'),
+                  'patty': pg.image.load(IMAGE_DIR
+                                          / 'burger'
+                                          / 'patty.png'),
+                  'bun': pg.image.load(IMAGE_DIR
+                                          / 'burger'
+                                          / 'bun.png'),
+                  'patty': pg.image.load(IMAGE_DIR
+                                          / 'burger'
+                                          / 'patty.png'),}
+
+    containers = None
+
+    def __init__(self, kind, owner):
+        super().__init__(self.containers)
+        self.kind = kind
+        self.owner = owner
+        self.image = self.IMAGE_DICT[self.kind]
+        self.rect = self.image.get_rect()
+
 
 class Popup(pg.sprite.Sprite):
 
@@ -117,6 +162,7 @@ class Popup(pg.sprite.Sprite):
         self.image = self.IMAGE
         self.rect = self.image.get_rect(midbottom=center)
         self.rect.move_ip(0, -25)
+        self.kill()
 
     def update(self):
         pass
@@ -137,9 +183,15 @@ class Text(pg.sprite.Sprite):
 
 class Button(pg.sprite.Sprite):
 
-    IMAGES = {'play': pg.image.load(IMAGE_DIR / 'buttons' / 'play.png'),
-              'play_armed': pg.image.load(IMAGE_DIR / 'buttons' / 'play_armed.png'),
-              'play_clicked': pg.image.load(IMAGE_DIR / 'buttons' / 'play_clicked.png')}
+    IMAGES = {'play': pg.image.load(IMAGE_DIR
+                                    / 'buttons'
+                                    / 'play.png'),
+              'play_armed': pg.image.load(IMAGE_DIR
+                                          / 'buttons'
+                                          / 'play_armed.png'),
+              'play_clicked': pg.image.load(IMAGE_DIR
+                                            / 'buttons'
+                                            / 'play_clicked.png')}
 
     containers = None
 

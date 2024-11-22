@@ -11,6 +11,7 @@ from src.sprites import (
     Player,
     Button,
     Popup,
+    Ingredient,
     read_tilemap,
 )
 
@@ -28,13 +29,15 @@ appliances = pg.sprite.Group()
 buttons = pg.sprite.Group()
 kitchen = pg.sprite.Group()
 popups = pg.sprite.Group()
+ingredients = pg.sprite.Group()
 
 # Assign sprite classes to certain groups.
 Player.containers = players, all_sprites
 Floor.containers = kitchen, all_sprites
 Appliance.containers = appliances, kitchen, all_sprites
-Button.containers = buttons
+Button.containers = buttons, all_sprites
 Popup.containers = popups, all_sprites
+Ingredient.containers = ingredients, all_sprites
 
 
 # Initialize objects.
@@ -90,7 +93,7 @@ while running:
 
         # Draw objects
         SCREEN.blit(background)
-        
+
         kitchen.draw(screen)
         players.draw(screen)
         popups.draw(screen)
@@ -98,8 +101,10 @@ while running:
 
         all_sprites.update()
 
-        # Move sprite, checking for collisions
+        # Direction controls and collision with appliances.
         keys = pg.key.get_pressed()
+
+        # Directional Keybindings
         up = keys[pg.K_w]
         down = keys[pg.K_s]
         left = keys[pg.K_a]
@@ -137,14 +142,31 @@ while running:
         # Keep chef in the kitchen.
         player.rect.clamp_ip(kitchen_rect)
 
-        # Player next to pantry
-        # TODO: must have a popup object assigned to an appliance
-        # for appliance in appliances:
-        #     if appliance.zone.colliderect(player):
-       
+        # Manage interaction between player and appliances.
+        interaction = keys[pg.K_e]
+
+        # Only interact with the closest appliance.
+        closest = min(appliances.sprites(),
+                      key=lambda x: player.center_vec.distance_to(x.center_vec))
+
+        for appliance in appliances:
+            if appliance.zone.colliderect(player) and appliance is closest:
+                    appliance.popup.add(Popup.containers)
+                    appliance.interact(player, interaction)
+            else:
+                appliance.popup.kill()
+
+
+        inventory = keys[pg.K_q]
+        inventoried = False
+
+        if inventory:
+            pass
+        pause = keys[pg.K_ESCAPE]
+
+
     pg.display.flip()
     clock.tick(60)
-    print(pg.time.get_ticks())
+    
 
 pg.quit()
-
