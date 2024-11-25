@@ -1,10 +1,11 @@
 import time
-from math import sin
+import string
 from abc import ABC
 import pygame as pg
 
 from paths import *
 from constants import *
+from src.gamestate import Gamestate
 
 # Every sprite must have a 'containers' class variable.
 # TODO: should images be stored outside of class,
@@ -62,7 +63,7 @@ class Player(pg.sprite.Sprite):
         self.image = self.up_still
         self.rect = self.image.get_rect(center=self.screen.get_rect().center)
         self.time = time.time()
-        self.inventory = []
+        self.inventory = Inventory(self)
 
     def update(self):
         self.center_vec = pg.math.Vector2(*self.rect.center)
@@ -84,51 +85,75 @@ class Tile(ABC):
         'x': pg.image.load(IMAGE_DIR / 'floor.png'),
         'f': pg.image.load(IMAGE_DIR / 'fryer.png'),
         'p': pg.image.load(IMAGE_DIR / 'pantry.png'),
-        'o': pg.image.load(IMAGE_DIR / 'oven.png')
+        'o': pg.image.load(IMAGE_DIR / 'oven.png'),
+        'c': pg.image.load(IMAGE_DIR / 'cutting.png')
     }
 
     containers = None
 
-    def __init__(self, tile_type: str, rect: pg.Rect):
+    def __init__(self, kind: str, rect: pg.Rect):
         super().__init__()
-        self.tile_type = tile_type
+        self.kind = kind
         # Will overwrite this rect immediately.
-        self.image = self.TILE_IMAGES[self.tile_type]
+        self.image = self.TILE_IMAGES[self.kind]
         self.rect = rect
         if self.containers == None:
             raise ValueError('Must define groups for this class.')
         self.add(self.containers)
 
 class Floor(Tile, pg.sprite.Sprite):
-    def __init__(self, tile_type, rect):
-        super().__init__(tile_type, rect)
+    def __init__(self, kind, rect):
+        super().__init__(kind, rect)
 
 class Appliance(Tile, pg.sprite.Sprite):
 
-    def __init__(self, tile_type, rect):
-        super().__init__(tile_type, rect)
+    def __init__(self, kind, rect):
+        super().__init__(kind, rect)
         self.zone = self.rect.inflate(70, 70)
         self.popup = Popup(self.rect.center)
         self.center_vec = pg.math.Vector2(*self.rect.center)
         self.inventory = []
+        self.stock()
         self.interacted = False
     
     def interact(self, actor, interaction):
         if not self.interacted and interaction:
             self.interacted = not self.interacted
-            if self.tile_type == 'p':
+            if self.kind == 'p':
                 if self.inventory:
                     item = self.inventory.pop()
-                    actor.inventory.append(item)
-                    print(f'Added to inventory: {item.kind}')
-                    print(actor.inventory)
+                    actor.inventory.items.append(item)
+                    print('Snagged!')
+            else:
+                if actor.inventory:
+                    for item in actor.inventory:
+                        if item.appliance == self.kind:
+                            return Gamestate.TYPING, self
+                        else:
+                            print('No item of correct type.')
+                else:
+                    print('Inventory empty!')
 
         elif self.interacted and not interaction:
             self.interacted = not self.interacted
-            
-class Ingredient(pg.sprite.Sprite):
 
-    IMAGE_DICT = {'cheese': pg.image.load(IMAGE_DIR
+        # Fix? Need to do this or else gamestate is altered incorrectly
+        return Gamestate.PLAYING, None
+
+    def stock(self):
+        if self.kind == 'p':
+            self.inventory = [Food('bun', self),
+                              Food('patty', self),
+                              Food('cheese', self)]
+            for item in self.inventory:
+                item.kill()
+            
+class Food(pg.sprite.Sprite):
+
+    IMAGE_DICT = {'burger': pg.image.load(IMAGE_DIR
+                                          / 'burger'
+                                          / 'burger.png'),
+                  'cheese': pg.image.load(IMAGE_DIR
                                           / 'burger'
                                           / 'cheese.png'),
                   'patty': pg.image.load(IMAGE_DIR
@@ -139,7 +164,16 @@ class Ingredient(pg.sprite.Sprite):
                                           / 'bun.png'),
                   'patty': pg.image.load(IMAGE_DIR
                                           / 'burger'
-                                          / 'patty.png'),}
+                                          / 'patty.png')}
+    
+    APPLIANCE_DICT = {'burger': None,
+                  'cheese': 'c',
+                  'patty': 'g',
+                  'bun': 'g',}
+    
+    FOOD_DICT = {'burger': ['bun',
+                            'patty',
+                            'cheese']}
 
     containers = None
 
@@ -149,6 +183,8 @@ class Ingredient(pg.sprite.Sprite):
         self.owner = owner
         self.image = self.IMAGE_DICT[self.kind]
         self.rect = self.image.get_rect()
+        self.appliance = self.APPLIANCE_DICT[self.kind]
+        self.prepared = False
 
 
 class Popup(pg.sprite.Sprite):
@@ -179,7 +215,53 @@ class Text(pg.sprite.Sprite):
         self.bgcolor = bgcolor
         self.image = self.font.render(self.text, 1, self.color, self.bgcolor)
         self.rect = self.image.get_rect()
-        self.offset = (0, -20)
+
+class Quote(Text):
+
+    containers = None
+
+    def __init__(self, text, font, fontsize, color, appliance, bgcolor=None):
+        super().__init__(text, font, fontsize, color, bgcolor)
+        # User input used to color text.
+        self.user = Text('', ASSET_DIR / 'fonts' /'pixel.ttf', 20, 'green')
+        self.offset = (0, -40)
+        self.rect.center = appliance.rect.center
+        self.rect = self.rect.move(*self.offset)
+        self.user.rect = self.rect
+        self.appliance = appliance
+        self.wrongs = 0
+        self.wronged = False
+
+    def update(self):
+        self.image = self.font.render(self.text, 1, self.color, self.bgcolor)
+        
+        if (not self.text.startswith(self.user.text) and
+            not self.wronged):
+            self.wronged = not self.wronged
+            self.color = 'red'
+            self.wrongs += 1
+            print(f'Wrongs: {self.wrongs}')
+            
+        elif self.text.startswith(self.user.text):
+            if self.wronged:
+                print(self.wrongs)
+                self.wronged = not self.wronged
+            self.color = 'black'
+            self.user.image = self.font.render(self.user.text, 1, self.user.color)
+
+    def type_out(self, events):
+        for event in events:
+            if event.type == pg.TEXTINPUT:
+                if (event.text in string.ascii_letters
+                    + string.digits
+                    + string.punctuation
+                    +  ' ' and
+                    not self.wronged):
+                    self.user.text = self.user.text + event.text
+            elif (event.type == pg.KEYDOWN and
+                  event.key == pg.K_BACKSPACE):
+                    self.user.text = self.user.text[:-1]
+            print(self.text.startswith(self.user.text))
 
 class Button(pg.sprite.Sprite):
 
@@ -252,3 +334,43 @@ def read_tilemap(path) -> pg.Rect:
                             gridwidth * TILESIZE)
 
     return kitchen_rect
+
+class Ticket(pg.sprite.Sprite):
+
+    containers = None
+
+    def __init__(self, food):
+        super().__init__(self.containers)
+        self.size = (100, 150)
+        self.offset = 10
+        self.ingredient_offset = 30
+        self.image = pg.Surface(self.size)
+        self.rect = self.image.get_rect().move(self.offset, self.offset)
+        self.food = Food(food, None)
+        self.food.rect.bottomleft = self.rect.bottomleft
+        self.ingredients = [Food(ingredient, None)
+                            for ingredient in Food.FOOD_DICT[food]]
+        for i, ingredient in enumerate(self.ingredients):
+            ingredient.rect.topleft = self.rect.topleft
+            ingredient.rect.move_ip(0, i*self.ingredient_offset)
+        
+    def update(self):
+        self.image.fill('white')
+
+class Inventory(pg.sprite.Sprite):
+
+    containers = None
+
+    def __init__(self, owner):
+        super().__init__(self.containers)
+        self.owner = owner
+        self.items = []
+        self.offset = (-20, -20)
+        self.image = pg.Surface((100, 50))
+        self.image.fill('white')
+        self.rect = self.image.get_rect()
+        self.inventoried = False
+
+    def update(self):
+        self.rect.bottomleft = self.owner.rect.topright
+        self.rect.move_ip(self.offset)

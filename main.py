@@ -1,8 +1,9 @@
 import pygame as pg
+import random
 from paths import *
 from constants import *
 
-from src.gamestate import Gamestate
+from src.gamestate import Gamestate, global_state
 from src.services import load_image
 
 from src.sprites import (
@@ -11,14 +12,17 @@ from src.sprites import (
     Player,
     Button,
     Popup,
-    Ingredient,
+    Food,
+    Quote,
+    Text,
+    Ticket,
+    Inventory,
     read_tilemap,
 )
 
 pg.init()
 screen = pg.display.set_mode((WIDTH, HEIGHT))
 clock = pg.time.Clock()
-global_state = Gamestate.PLAYING # TODO: change to MAIN_MENU
 
 background, _ = load_image(IMAGE_DIR / 'background.png')
 
@@ -29,7 +33,11 @@ appliances = pg.sprite.Group()
 buttons = pg.sprite.Group()
 kitchen = pg.sprite.Group()
 popups = pg.sprite.Group()
-ingredients = pg.sprite.Group()
+quotes = pg.sprite.Group()
+texts = pg.sprite.Group()
+foods = pg.sprite.Group()
+tickets = pg.sprite.Group()
+inventories = pg.sprite.Group()
 
 # Assign sprite classes to certain groups.
 Player.containers = players, all_sprites
@@ -37,8 +45,11 @@ Floor.containers = kitchen, all_sprites
 Appliance.containers = appliances, kitchen, all_sprites
 Button.containers = buttons, all_sprites
 Popup.containers = popups, all_sprites
-Ingredient.containers = ingredients, all_sprites
-
+Quote.containers = quotes, all_sprites
+Text.containers = texts, all_sprites
+Food.containers = foods, all_sprites
+Ticket.containers = tickets, all_sprites
+Inventory.containers = inventories, all_sprites
 
 # Initialize objects.
 kitchen_rect = read_tilemap('map1')
@@ -49,7 +60,7 @@ running = True
 while running:
     events = pg.event.get()
     for event in events:
-        if event.type == pg.QUIT or event.type == pg.K_q:
+        if event.type == pg.QUIT:
             running = False
 
     keys = pg.key.get_pressed()
@@ -97,8 +108,15 @@ while running:
         kitchen.draw(screen)
         players.draw(screen)
         popups.draw(screen)
+        tickets.draw(screen)
+        foods.draw(screen)
+        inventories.draw(screen)
 
+        # Kill unnecessary objects.
+        for sprite in quotes.sprites():
+            sprite.kill()
 
+        # Update all objects.
         all_sprites.update()
 
         # Direction controls and collision with appliances.
@@ -152,21 +170,51 @@ while running:
         for appliance in appliances:
             if appliance.zone.colliderect(player) and appliance is closest:
                     appliance.popup.add(Popup.containers)
-                    appliance.interact(player, interaction)
+                    global_state, quote_owner = appliance.interact(player, interaction)
             else:
                 appliance.popup.kill()
 
-
+        # Inventory to see items player is holding.
         inventory = keys[pg.K_q]
-        inventoried = False
+        if inventory and not player.inventory.inventoried:
+            player.inventory.inventoried = not player.inventory.inventoried
+            print('Items in inventory:')
+            for item in player.inventory:
+                print(f'    {item.kind}')
+        if not inventory and player.inventory.inventoried:
+            player.inventory.inventoried = not player.inventory.inventoried
 
-        if inventory:
-            pass
         pause = keys[pg.K_ESCAPE]
 
+        # Generate tickets
+        if not tickets:
+            Ticket('burger')
+        # Ingredients wont be in a group is they are `.kill()`ed
+        # list them in a stack. First of its kind will be removed once made.
+        needs_prepared = [ingredient for ticket in tickets
+                          for ingredient in ticket.ingredients
+                          if ingredient.groups()]
+
+    elif global_state == Gamestate.TYPING:
+        # Put this before pg.display.flip()
+        all_sprites.update()
+        quotes.draw(screen)
+        texts.draw(screen)
+        if not quotes:
+            quote = Quote('Quality is not an act, it is a habit.',
+              ASSET_DIR / 'fonts' / 'pixel.ttf',
+              14,
+              'black',
+              quote_owner,
+              'white')
+        quote.type_out(events)
+
+        escape = keys[pg.K_ESCAPE]
+        if escape:
+            global_state = Gamestate.PLAYING
 
     pg.display.flip()
-    clock.tick(60)
+    clock.tick(FPS)
     
 
 pg.quit()

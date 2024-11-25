@@ -90,16 +90,24 @@ class Player(pg.sprite.Sprite):
     def update(self):
         self._move()
 
-player = Player()
-group = pg.sprite.Group(player)
+group = pg.sprite.Group()
+
+surf = pg.image.load(IMAGE_DIR / 'oven.png')
+rect = surf.get_rect()
+
+x = 0
+y = 500
+
 while running:
     for event in pg.event.get():
         if event.type == pg.QUIT:
             running = False
     
     screen.fill('white')
-    group.draw(screen)
-    group.update()
+
+    screen.blit(surf, (500, 500, 200, 200), (x, 40, 20, 20))
+    x += 1
+
     pg.display.flip()
     clock.tick(60)
 
