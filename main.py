@@ -11,6 +11,7 @@ from src.sprites import (
     Floor,
     Player,
     Button,
+    # InventoryButton,
     Popup,
     Food,
     Quote,
@@ -38,6 +39,7 @@ texts = pg.sprite.Group()
 foods = pg.sprite.Group()
 tickets = pg.sprite.Group()
 inventories = pg.sprite.Group()
+inv_buttons = pg.sprite.Group()
 
 # Assign sprite classes to certain groups.
 Player.containers = players, all_sprites
@@ -50,11 +52,13 @@ Text.containers = texts, all_sprites
 Food.containers = foods, all_sprites
 Ticket.containers = tickets, all_sprites
 Inventory.containers = inventories, all_sprites
+InventoryButton.containers = inv_buttons, all_sprites
 
 # Initialize objects.
 kitchen_rect = read_tilemap('map1')
 player = Player()
 play = Button('play')
+inventory_button = InventoryButton(InventoryButton.image)
 
 running = True
 while running:
@@ -102,6 +106,7 @@ while running:
 
     elif global_state == Gamestate.PLAYING:
 
+
         # Draw objects
         SCREEN.blit(background)
 
@@ -112,12 +117,14 @@ while running:
         foods.draw(screen)
         inventories.draw(screen)
 
-        # Kill unnecessary objects.
+        # TEST
+        inv_buttons.draw(screen)
+        # Kill unnecessary objects from other gamestates.
         for sprite in quotes.sprites():
             sprite.kill()
 
         # Update all objects.
-        all_sprites.update()
+        print(inventory_button.pressed())
 
         # Direction controls and collision with appliances.
         keys = pg.key.get_pressed()
@@ -170,19 +177,26 @@ while running:
         for appliance in appliances:
             if appliance.zone.colliderect(player) and appliance is closest:
                     appliance.popup.add(Popup.containers)
-                    global_state, quote_owner = appliance.interact(player, interaction)
+                    global_state, quote_owner = appliance.interact(player,
+                                                                   interaction)
             else:
                 appliance.popup.kill()
 
         # Inventory to see items player is holding.
         inventory = keys[pg.K_q]
-        if inventory and not player.inventory.inventoried:
-            player.inventory.inventoried = not player.inventory.inventoried
-            print('Items in inventory:')
-            for item in player.inventory:
-                print(f'    {item.kind}')
-        if not inventory and player.inventory.inventoried:
-            player.inventory.inventoried = not player.inventory.inventoried
+        if inventory and not player.inventory.opening:
+            player.inventory.opening = not player.inventory.opening
+            player.inventory.open = not player.inventory.open        
+        elif not inventory and player.inventory.opening:
+            player.inventory.opening = not player.inventory.opening
+        
+        if player.inventory.open:
+            inventories.add(player.inventory)
+        else:
+            # Empty group instead of killing inventory.
+            # This allows location to keep updating, avoiding the menu
+            # visibly 'jaumping' from last location as soon as it's opened.
+            inventories.empty()
 
         pause = keys[pg.K_ESCAPE]
 

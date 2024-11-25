@@ -360,16 +360,17 @@ class Ticket(pg.sprite.Sprite):
 class Inventory(pg.sprite.Sprite):
 
     containers = None
-
     def __init__(self, owner):
         super().__init__(self.containers)
         self.owner = owner
+        self.index = 0
         self.items = []
         self.offset = (-20, -20)
         self.image = pg.Surface((100, 50))
         self.image.fill('white')
         self.rect = self.image.get_rect()
-        self.inventoried = False
+        self.opening = False
+        self.open = False
 
     def update(self):
         self.rect.bottomleft = self.owner.rect.topright
