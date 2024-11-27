@@ -1,19 +1,34 @@
-from typing import Tuple
+import random
+from pathlib import Path
 import pygame as pg
 
-from paths import *
-from constants import *
+def quotegen(quotes: dict) -> tuple[str, str]:
+    """Returns a tuple of an author and one of their quotes.
+    """
+    
+    author = random.choice(list(quotes.keys()))
+    quote = random.choice(quotes[author])
 
-def load_image(path: str) -> Tuple[pg.Surface, pg.Rect]:
-    """Load image and return image object"""
-    imagefile = path
-    try:
-        image = pg.image.load(imagefile)
-        if image.get_alpha() is None:
-            image = image.convert()
-        else:
-            image = image.convert_alpha()
-    except FileNotFoundError:
-        print(f"Cannot load image: {imagefile}")
-        raise SystemExit
-    return image, image.get_rect()
+    return author, quote
+
+def quoteread(file: str | Path) -> dict[str, list]:
+    """Read quotes.txt and return dictionary in the form of {author: quote}
+    """
+
+    quotes = {}
+    author = None
+
+    with open(file, 'r', encoding='utf-8') as infile:
+        for line in infile:
+            line = line.strip()
+            # Empty lines separate author/quote blocks
+            if not line:
+                author = None
+            # Found an author
+            elif not author:
+                author = line
+                quotes[author] = []
+            else:
+                quotes[author].append(line)
+
+    return quotes

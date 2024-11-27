@@ -6,10 +6,13 @@ import pygame as pg
 from paths import *
 from constants import *
 from src.gamestate import Gamestate
+from src.services import quotegen
 
 # Every sprite must have a 'containers' class variable.
 # TODO: should images be stored outside of class,
 #   so all in one place?
+# TODO: change 'food' to dish, removing ambiguity of food vs. ingredient
+# TODO: one button class
 
 class Player(pg.sprite.Sprite):
 
@@ -126,7 +129,7 @@ class Appliance(Tile, pg.sprite.Sprite):
                     print('Snagged!')
             else:
                 if actor.inventory:
-                    for item in actor.inventory:
+                    for item in actor.inventory.items:
                         if item.appliance == self.kind:
                             return Gamestate.TYPING, self
                         else:
@@ -145,6 +148,8 @@ class Appliance(Tile, pg.sprite.Sprite):
             self.inventory = [Food('bun', self),
                               Food('patty', self),
                               Food('cheese', self)]
+            
+            # Don't draw sprites.
             for item in self.inventory:
                 item.kill()
             
@@ -185,6 +190,7 @@ class Food(pg.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.appliance = self.APPLIANCE_DICT[self.kind]
         self.prepared = False
+        self.quote = Quote()
 
 
 class Popup(pg.sprite.Sprite):
@@ -234,17 +240,16 @@ class Quote(Text):
 
     def update(self):
         self.image = self.font.render(self.text, 1, self.color, self.bgcolor)
-        
+        if self.user.text == self.text:
+            self.kill()
         if (not self.text.startswith(self.user.text) and
             not self.wronged):
             self.wronged = not self.wronged
             self.color = 'red'
             self.wrongs += 1
-            print(f'Wrongs: {self.wrongs}')
             
         elif self.text.startswith(self.user.text):
             if self.wronged:
-                print(self.wrongs)
                 self.wronged = not self.wronged
             self.color = 'black'
             self.user.image = self.font.render(self.user.text, 1, self.user.color)
@@ -261,7 +266,7 @@ class Quote(Text):
             elif (event.type == pg.KEYDOWN and
                   event.key == pg.K_BACKSPACE):
                     self.user.text = self.user.text[:-1]
-            print(self.text.startswith(self.user.text))
+
 
 class Button(pg.sprite.Sprite):
 
@@ -271,7 +276,7 @@ class Button(pg.sprite.Sprite):
               'play_armed': pg.image.load(IMAGE_DIR
                                           / 'buttons'
                                           / 'play_armed.png'),
-              'play_clicked': pg.image.load(IMAGE_DIR
+              'play_clicked': pg.image.load(IMAGE_DIR                                         
                                             / 'buttons'
                                             / 'play_clicked.png')}
 
@@ -345,6 +350,7 @@ class Ticket(pg.sprite.Sprite):
         self.offset = 10
         self.ingredient_offset = 30
         self.image = pg.Surface(self.size)
+        self.image.fill('white')
         self.rect = self.image.get_rect().move(self.offset, self.offset)
         self.food = Food(food, None)
         self.food.rect.bottomleft = self.rect.bottomleft
@@ -353,9 +359,11 @@ class Ticket(pg.sprite.Sprite):
         for i, ingredient in enumerate(self.ingredients):
             ingredient.rect.topleft = self.rect.topleft
             ingredient.rect.move_ip(0, i*self.ingredient_offset)
-        
+        self.author, self.quote = quotegen()
+
     def update(self):
-        self.image.fill('white')
+        pass
+        
 
 class Inventory(pg.sprite.Sprite):
 
@@ -371,7 +379,53 @@ class Inventory(pg.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.opening = False
         self.open = False
+        self.left = InventoryButton(pg.transform.rotate(InventoryButton.image, 180))
+        self.right = InventoryButton(InventoryButton.image)
 
     def update(self):
         self.rect.bottomleft = self.owner.rect.topright
         self.rect.move_ip(self.offset)
+
+        self.left.rect.midleft = self.rect.midleft
+
+
+        self.right.rect.midright = self.rect.midright
+        
+
+
+        if self.items:
+            self.items[self.index].rect.center = self.rect.center
+
+
+class InventoryButton(pg.sprite.Sprite):
+
+    containers = None
+
+    image = pg.image.load(IMAGE_DIR / 'button.png')
+
+    def __init__(self, image):
+        super().__init__(self.containers)
+        self.image = image
+        self.rect = self.image.get_rect()
+        self.pressed = False
+
+    # Return True when button is released while cursor is in button.
+    def is_pressed(self):
+        if self.alive():
+            pos = pg.mouse.get_pos()
+            click = pg.mouse.get_pressed()[0]
+
+            # Clicked while cursor in button
+            if (click and
+                self.rect.collidepoint(pos) and
+                not self.pressed):
+                self.pressed = not self.pressed
+            # Relesed in button
+            elif (not click and
+                self.rect.collidepoint(pos) and
+                self.pressed):
+                self.pressed = not self.pressed
+                return True
+            
+        return False
+        

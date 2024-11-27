@@ -1,17 +1,18 @@
+# TODO: change syntax for button and interactions to foo.is_pressed(pg.K_foo)
+
 import pygame as pg
 import random
 from paths import *
 from constants import *
 
 from src.gamestate import Gamestate, global_state
-from src.services import load_image
 
 from src.sprites import (
     Appliance,
     Floor,
     Player,
     Button,
-    # InventoryButton,
+    InventoryButton,
     Popup,
     Food,
     Quote,
@@ -25,7 +26,7 @@ pg.init()
 screen = pg.display.set_mode((WIDTH, HEIGHT))
 clock = pg.time.Clock()
 
-background, _ = load_image(IMAGE_DIR / 'background.png')
+background = pg.image.load(IMAGE_DIR / 'background.png')
 
 # Create groups.
 all_sprites = pg.sprite.Group()
@@ -38,8 +39,8 @@ quotes = pg.sprite.Group()
 texts = pg.sprite.Group()
 foods = pg.sprite.Group()
 tickets = pg.sprite.Group()
-inventories = pg.sprite.Group()
-inv_buttons = pg.sprite.Group()
+inventory = pg.sprite.Group()
+inventory_food = pg.sprite.GroupSingle()
 
 # Assign sprite classes to certain groups.
 Player.containers = players, all_sprites
@@ -51,14 +52,13 @@ Quote.containers = quotes, all_sprites
 Text.containers = texts, all_sprites
 Food.containers = foods, all_sprites
 Ticket.containers = tickets, all_sprites
-Inventory.containers = inventories, all_sprites
-InventoryButton.containers = inv_buttons, all_sprites
+Inventory.containers = inventory, all_sprites
+InventoryButton.containers = inventory, all_sprites
 
 # Initialize objects.
 kitchen_rect = read_tilemap('map1')
 player = Player()
 play = Button('play')
-inventory_button = InventoryButton(InventoryButton.image)
 
 running = True
 while running:
@@ -106,7 +106,6 @@ while running:
 
     elif global_state == Gamestate.PLAYING:
 
-
         # Draw objects
         SCREEN.blit(background)
 
@@ -115,16 +114,15 @@ while running:
         popups.draw(screen)
         tickets.draw(screen)
         foods.draw(screen)
-        inventories.draw(screen)
+        inventory.draw(screen)
+        inventory_food.draw(screen)
 
-        # TEST
-        inv_buttons.draw(screen)
         # Kill unnecessary objects from other gamestates.
         for sprite in quotes.sprites():
             sprite.kill()
 
         # Update all objects.
-        print(inventory_button.pressed())
+        all_sprites.update()
 
         # Direction controls and collision with appliances.
         keys = pg.key.get_pressed()
@@ -183,20 +181,39 @@ while running:
                 appliance.popup.kill()
 
         # Inventory to see items player is holding.
-        inventory = keys[pg.K_q]
-        if inventory and not player.inventory.opening:
+        open_inventory = keys[pg.K_q]
+        if open_inventory and not player.inventory.opening:
             player.inventory.opening = not player.inventory.opening
             player.inventory.open = not player.inventory.open        
-        elif not inventory and player.inventory.opening:
+        elif not open_inventory and player.inventory.opening:
             player.inventory.opening = not player.inventory.opening
         
         if player.inventory.open:
-            inventories.add(player.inventory)
+            player.inventory.add(Inventory.containers)
+            player.inventory.left.add(Inventory.containers)
+            player.inventory.right.add(Inventory.containers)
+            if player.inventory.items:
+                player.inventory.items[player.inventory.index].add(inventory_food, all_sprites)
         else:
+            # Kill button sprites so not activeted when not showing.
+            for item in inventory:
+                if isinstance(item, InventoryButton) and item.alive():
+                    item.kill()
+            inventory_food.empty()
             # Empty group instead of killing inventory.
             # This allows location to keep updating, avoiding the menu
-            # visibly 'jaumping' from last location as soon as it's opened.
-            inventories.empty()
+            # visibly 'jumping' from last location as soon as it's opened.
+            inventory.empty()
+        
+        # If any items in list.
+        if player.inventory.items:
+            if (player.inventory.right.is_pressed() and
+                player.inventory.index < len(player.inventory.items) - 1):
+                player.inventory.index += 1
+            elif (player.inventory.left.is_pressed() and
+                  player.inventory.index > 0):
+                player.inventory.index -= 1
+            
 
         pause = keys[pg.K_ESCAPE]
 
@@ -205,9 +222,9 @@ while running:
             Ticket('burger')
         # Ingredients wont be in a group is they are `.kill()`ed
         # list them in a stack. First of its kind will be removed once made.
-        needs_prepared = [ingredient for ticket in tickets
-                          for ingredient in ticket.ingredients
-                          if ingredient.groups()]
+        # needs_prepared = [ingredient for ticket in tickets
+        #                   for ingredient in ticket.ingredients
+        #                   if ingredient.groups()]
 
     elif global_state == Gamestate.TYPING:
         # Put this before pg.display.flip()
