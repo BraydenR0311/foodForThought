@@ -144,10 +144,6 @@ class Quote(Text):
 
     def update(self):
         self.image = self.font.render(self.text, 1, self.color, self.bgcolor)
-        
-        if self.user.text == self.text:
-            self.user.kill()
-            self.kill()
         if (not self.text.startswith(self.user.text) and
             not self.wronged):
             self.wronged = not self.wronged
@@ -173,6 +169,10 @@ class Quote(Text):
             elif (event.type == pg.KEYDOWN and
                   event.key == pg.K_BACKSPACE):
                     self.user.text = self.user.text[:-1]
+        
+        if self.user.text == self.text:
+            self.user.kill()
+            self.kill()
             
 class Food(pg.sprite.Sprite):
 
@@ -194,8 +194,8 @@ class Food(pg.sprite.Sprite):
     
     APPLIANCE_DICT = {'burger': None,
                   'cheese': 'c',
-                  'patty': 'o',
-                  'bun': 'o',}
+                  'patty': 'g',
+                  'bun': 'g',}
     
     FOOD_DICT = {'burger': ['bun',
                             'patty',

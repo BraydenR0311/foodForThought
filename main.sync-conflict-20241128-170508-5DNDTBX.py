@@ -34,12 +34,10 @@ buttons = pg.sprite.Group()
 kitchen = pg.sprite.Group()
 popups = pg.sprite.Group()
 quotes = pg.sprite.Group()
-cook_group = pg.sprite.GroupSingle()
+quote_to_cook = pg.sprite.GroupSingle()
 texts = pg.sprite.Group()
 foods = pg.sprite.Group()
 tickets = pg.sprite.Group()
-# TEST
-foos = pg.sprite.Group()
 
 # Assign sprite classes to certain groups.
 Player.containers = players, all_sprites
@@ -156,11 +154,10 @@ while running:
         # Keep chef in the kitchen.
         player.rect.clamp_ip(kitchen_rect)
 
-
-         # Generate tickets
-        # TODO: generate tickets dynamically
-        if not tickets:
-            foo = Ticket('burger')
+        # list them in a stack. First of its kind will be removed once made.
+        needs_prepared = [ingredient for ticket in tickets
+                          for ingredient in ticket.ingredients
+                          if ingredient.groups()]
 
         # Manage interaction between player and appliances.
         interaction = keys[pg.K_e]
@@ -171,43 +168,37 @@ while running:
         for appliance in appliances:
             if appliance.zone.colliderect(player) and appliance is closest:
                 appliance.popup.add(Popup.containers)
-                for ticket in tickets:
-                    if ticket.ingredients:
-                        for ingredient in ticket.ingredients:
-                            ingr_app = ingredient.APPLIANCE_DICT[ingredient.kind]
-                        if (ingr_app == appliance.kind and
-                            interaction):
-                            cooked_ticket = ticket
-                            cooked = ingredient
-                            cooked.quote.add(cook_group)
-                            global_state = Gamestate.TYPING
+                for ingredient in needs_prepared:
+                    ingr_app = ingredient.APPLIANCE_DICT[ingredient.kind]
+                    if (ingr_app == appliance.kind and
+                        interaction):
+                        to_cook = ingredient
+                        to_cook.quote.add(quote_to_cook)
+                        global_state = Gamestate.TYPING
             else:
                 appliance.popup.kill()
 
         pause = keys[pg.K_ESCAPE]
-        
+
+        # Generate tickets
+        # TODO: generate tickets dynamically
+        if not tickets:
+            Ticket('burger')
 
     elif global_state == Gamestate.TYPING:
-        SCREEN.blit(background)
-        kitchen.draw(screen)
-        players.draw(screen)
-        tickets.draw(screen)
-        foods.draw(screen)
-        cook_group.draw(screen)
-        texts.draw(screen)
         # Put this before pg.display.flip()
-        all_sprites.update()
+        quote_to_cook.update()
+        texts.update()
 
-
-        cooked.quote.type_out(events)
+        print(quote_to_cook)
+        quote_to_cook.draw(screen)
+        texts.draw(screen)
+        print('texts', texts)
+        print(quotes)
+        to_cook.quote.type_out(events)
 
         escape = keys[pg.K_ESCAPE]
         if escape:
-            global_state = Gamestate.PLAYING
-        
-        if not cook_group:
-            cooked_ticket.ingredients.remove(cooked)
-            print(cooked_ticket.ingredients)
             global_state = Gamestate.PLAYING
 
     pg.display.flip()
