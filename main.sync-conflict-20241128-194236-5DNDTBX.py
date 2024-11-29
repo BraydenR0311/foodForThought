@@ -17,8 +17,6 @@ from src.sprites import (
     Quote,
     Text,
     Ticket,
-    Generic,
-    Timer,
     read_tilemap,
 )
 
@@ -26,7 +24,7 @@ pg.init()
 screen = pg.display.set_mode((WIDTH, HEIGHT))
 clock = pg.time.Clock()
 
-background = pg.image.load(IMAGE_DIR / 'background.png').convert()
+background = pg.image.load(IMAGE_DIR / 'background.png')
 
 # Create groups.
 all_sprites = pg.sprite.Group()
@@ -36,14 +34,10 @@ buttons = pg.sprite.Group()
 kitchen = pg.sprite.Group()
 popups = pg.sprite.Group()
 quotes = pg.sprite.Group()
-cook_group = pg.sprite.GroupSingle()
+quote_to_cook = pg.sprite.GroupSingle()
 texts = pg.sprite.Group()
 foods = pg.sprite.Group()
 tickets = pg.sprite.Group()
-generics = pg.sprite.Group()
-cook_timer = pg.sprite.Group()
-# TEST
-foos = pg.sprite.Group()
 
 # Assign sprite classes to certain groups.
 Player.containers = players, all_sprites
@@ -55,8 +49,6 @@ Quote.containers = quotes, all_sprites
 Text.containers = texts, all_sprites
 Food.containers = foods, all_sprites
 Ticket.containers = tickets, all_sprites
-Generic.containers = generics, all_sprites
-Timer.containers = cook_timer, all_sprites
 
 # Initialize objects.
 kitchen_rect = read_tilemap(ASSET_DIR / 'map.txt')
@@ -117,7 +109,6 @@ while running:
         popups.draw(screen)
         tickets.draw(screen)
         foods.draw(screen)
-        generics.draw(screen)
 
         # Update all objects.
         all_sprites.update()
@@ -163,11 +154,10 @@ while running:
         # Keep chef in the kitchen.
         player.rect.clamp_ip(kitchen_rect)
 
-
-         # Generate tickets
-        # TODO: generate tickets dynamically
-        if not tickets:
-            foo = Ticket('burger')
+        # list them in a stack. First of its kind will be removed once made.
+        needs_prepared = [ingredient for ticket in tickets
+                          for ingredient in ticket.ingredients
+                          if ingredient.groups()]
 
         # Manage interaction between player and appliances.
         interaction = keys[pg.K_e]
@@ -175,92 +165,42 @@ while running:
         # Only interact with the closest appliance.
         closest = min(appliances.sprites(),
                       key=lambda x: player.center_vec.distance_to(x.center_vec))
-        
         for appliance in appliances:
-            if appliance is not closest:
+            if appliance.zone.colliderect(player) and appliance is closest:
+                appliance.popup.add(Popup.containers)
+                for ingredient in needs_prepared:
+                    ingr_app = ingredient.APPLIANCE_DICT[ingredient.kind]
+                    if (ingr_app == appliance.kind and
+                        interaction):
+                        to_cook = ingredient
+                        to_cook.quote.add(quote_to_cook)
+                        global_state = Gamestate.TYPING
+            else:
                 appliance.popup.kill()
 
-        if closest.zone.colliderect(player):
-            closest.popup.add(Popup.containers)
-        else:
-            closest.popup.kill()
+        pause = keys[pg.K_ESCAPE]
 
-        if interaction:
-            for ticket in tickets:
-                for ingredient in ticket.ingredients:
-                    ingr_app = ingredient.APPLIANCE_DICT[ingredient.kind]
-                    if (ingr_app == closest.kind):
-                        cooked_ticket = ticket
-                        cooked = ingredient
-                        quote = ticket.quotes[0]
-                        quote.add(cook_group)
-                        global_state = Gamestate.TYPING
-
-        # for appliance in appliances:
-        #     if appliance.zone.colliderect(player) and appliance is closest:
-        #         appliance.popup.add(Popup.containers)
-        #         for ticket in tickets:
-        #             if ticket.ingredients:
-        #                 for ingredient in ticket.ingredients:
-        #                     ingr_app = ingredient.APPLIANCE_DICT[ingredient.kind]
-        #                     print(ingr_app)
-        #                 if (ingr_app == appliance.kind and
-        #                     interaction):
-        #                     cooked_ticket = ticket
-        #                     cooked = ingredient
-        #                     quote = ticket.quotes[0]
-        #                     quote.add(cook_group)
-        #                     global_state = Gamestate.TYPING
-        #     else:
-        #         appliance.popup.kill()
-
-        pause = keys[pg.K_ESCAPE]        
+        # Generate tickets
+        # TODO: generate tickets dynamically
+        if not tickets:
+            Ticket('burger')
 
     elif global_state == Gamestate.TYPING:
-        SCREEN.blit(background)
-        kitchen.draw(screen)
-        players.draw(screen)
-        tickets.draw(screen)
-        foods.draw(screen)
-        cook_group.draw(screen)
-        texts.draw(screen)
-        generics.draw(screen)
-        cook_timer.draw(screen)
         # Put this before pg.display.flip()
-        all_sprites.update()
+        quote_to_cook.update()
+        texts.update()
 
+        print(quote_to_cook)
+        quote_to_cook.draw(screen)
+        texts.draw(screen)
+        print('texts', texts)
+        print(quotes)
+        to_cook.quote.type_out(events)
 
-        quote.type_out(events)
-        if not cook_timer:
-            timer = Timer(len(quote.text.split()),
-                  ASSET_DIR / 'fonts' / 'pixel.ttf',
-                  80,
-                  'black') 
-        print(int(timer.text))
-        if int(timer.text) == 0 or quote.wrongs >= 3:
-            quote.user.kill()
-            cooked.check.image = pg.image.load(IMAGE_DIR / 'x.png').convert_alpha()
-            cooked_ticket.ingredients.remove(cooked)
-            cooked_ticket.cooked.append(cooked)
-            cooked_ticket.quotes.remove(quote)
-            cooked.check.add(Generic.containers)
-            timer.kill()
+        escape = keys[pg.K_ESCAPE]
+        if escape:
             global_state = Gamestate.PLAYING
 
-
-
-
-
-        if not cook_group:
-            quote.user.kill()
-            cooked_ticket.ingredients.remove(cooked)
-            cooked_ticket.cooked.append(cooked)
-            cooked_ticket.quotes.remove(quote)
-            cooked.check.add(Generic.containers)
-            timer.kill()
-            global_state = Gamestate.PLAYING
-
-    print(clock.get_fps())
     pg.display.flip()
     clock.tick(FPS)
     

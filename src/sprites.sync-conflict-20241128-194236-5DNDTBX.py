@@ -16,7 +16,7 @@ from src.services import quotegen
 
 class Player(pg.sprite.Sprite):
 
-    up_still = pg.image.load(IMAGE_DIR / 'chef' / 'chef1.png').convert_alpha()
+    up_still = pg.image.load(IMAGE_DIR / 'chef' / 'chef1.png')
 
     down_still = pg.transform.rotate(up_still, 180)
 
@@ -25,9 +25,9 @@ class Player(pg.sprite.Sprite):
     right_still = pg.transform.rotate(up_still, 270)
 
     walk_up = [
-        pg.image.load(IMAGE_DIR / 'chef' / 'chef2.png').convert_alpha(),
+        pg.image.load(IMAGE_DIR / 'chef' / 'chef2.png'),
         up_still,
-        pg.image.load(IMAGE_DIR / 'chef' / 'chef3.png').convert_alpha(),
+        pg.image.load(IMAGE_DIR / 'chef' / 'chef3.png'),
         up_still
     ]
 
@@ -83,12 +83,12 @@ class Player(pg.sprite.Sprite):
 class Tile(ABC):
 
     TILE_IMAGES = {
-        '#': pg.image.load(IMAGE_DIR / 'floor.png').convert_alpha(),
-        'x': pg.image.load(IMAGE_DIR / 'floor.png').convert_alpha(),
-        'f': pg.image.load(IMAGE_DIR / 'fryer.png').convert_alpha(),
-        'p': pg.image.load(IMAGE_DIR / 'pantry.png').convert_alpha(),
-        'o': pg.image.load(IMAGE_DIR / 'oven.png').convert_alpha(),
-        'c': pg.image.load(IMAGE_DIR / 'cutting.png').convert_alpha()
+        '#': pg.image.load(IMAGE_DIR / 'floor.png'),
+        'x': pg.image.load(IMAGE_DIR / 'floor.png'),
+        'f': pg.image.load(IMAGE_DIR / 'fryer.png'),
+        'p': pg.image.load(IMAGE_DIR / 'pantry.png'),
+        'o': pg.image.load(IMAGE_DIR / 'oven.png'),
+        'c': pg.image.load(IMAGE_DIR / 'cutting.png')
     }
 
     containers = None
@@ -121,7 +121,7 @@ class Text(pg.sprite.Sprite):
 
     def __init__(self, text, font, fontsize, color, bgcolor=None):
         super().__init__(self.containers)
-        self.text = str(text)
+        self.text = text
         self.font = pg.font.Font(font, fontsize)
         self.color = color
         self.bgcolor = bgcolor
@@ -135,19 +135,15 @@ class Quote(Text):
     def __init__(self, text, font, fontsize, color, bgcolor=None):
         super().__init__(text, font, fontsize, color, bgcolor)
         # User input used to color text.
-        self.user = Text('', font, fontsize, 'green')
+        self.user = Text('', ASSET_DIR / 'fonts' /'pixel.ttf', 20, 'green')
         self.rect.center = SCREEN_RECT.center
-        self.rect = self.rect.move(0, +SCREEN_RECT.height // 3)
+        self.rect = self.rect.move(0, -SCREEN_RECT.height // 3)
         self.user.rect = self.rect
         self.wrongs = 0
         self.wronged = False
 
     def update(self):
         self.image = self.font.render(self.text, 1, self.color, self.bgcolor)
-        
-        if self.user.text == self.text:
-            self.user.kill()
-            self.kill()
         if (not self.text.startswith(self.user.text) and
             not self.wronged):
             self.wronged = not self.wronged
@@ -173,48 +169,33 @@ class Quote(Text):
             elif (event.type == pg.KEYDOWN and
                   event.key == pg.K_BACKSPACE):
                     self.user.text = self.user.text[:-1]
-
-class Timer(Text):
-
-    containers = None
-
-    def __init__(self, length, font, fontsize, color, bgcolor=None):
-        super().__init__(length, font, fontsize, color, bgcolor)
-        self.length = length
-        self.rect.center = SCREEN_RECT.center
-        self.rect.move_ip(SCREEN_RECT.width // 3, 0)
-        self.start = int(time.time())
-  
-    def update(self):
-        now = int(time.time())
-        passed = now - self.start
-        self.text = str(self.length - passed)
-        self.image = self.font.render(self.text, 1, self.color, self.bgcolor)
-
-
+        
+        if self.user.text == self.text:
+            self.user.kill()
+            self.kill()
             
 class Food(pg.sprite.Sprite):
 
     IMAGE_DICT = {'burger': pg.image.load(IMAGE_DIR
                                           / 'burger'
-                                          / 'burger.png').convert_alpha(),
+                                          / 'burger.png'),
                   'cheese': pg.image.load(IMAGE_DIR
                                           / 'burger'
-                                          / 'cheese.png').convert_alpha(),
+                                          / 'cheese.png'),
                   'patty': pg.image.load(IMAGE_DIR
                                           / 'burger'
-                                          / 'patty.png').convert_alpha(),
+                                          / 'patty.png'),
                   'bun': pg.image.load(IMAGE_DIR
                                           / 'burger'
-                                          / 'bun.png').convert_alpha(),
+                                          / 'bun.png'),
                   'patty': pg.image.load(IMAGE_DIR
                                           / 'burger'
-                                          / 'patty.png').convert_alpha()}
+                                          / 'patty.png')}
     
     APPLIANCE_DICT = {'burger': None,
                   'cheese': 'c',
-                  'patty': 'o',
-                  'bun': 'o',}
+                  'patty': 'g',
+                  'bun': 'g',}
     
     FOOD_DICT = {'burger': ['bun',
                             'patty',
@@ -230,8 +211,20 @@ class Food(pg.sprite.Sprite):
 
         self.image = self.IMAGE_DICT[self.kind]
         self.rect = self.image.get_rect()
-        self.check = Generic(IMAGE_DIR / 'check.png')
-        self.check_offset = (50, 0)
+
+    @staticmethod
+    def split_quote(quote, index):
+        quote = quote.split()
+        chunk_len = len(quote) // 3
+
+        first = ' '.join(quote[:chunk_len])
+        second = ' '.join(quote[chunk_len:2 * chunk_len])
+        third = ' '.join(quote[2 * chunk_len:])
+
+        quotes = first, second, third
+
+        return quotes[index]
+
 
 class Ticket(pg.sprite.Sprite):
 
@@ -258,46 +251,17 @@ class Ticket(pg.sprite.Sprite):
         for i, ingredient in enumerate(self.ingredients):
             ingredient.rect.topleft = self.rect.topleft
             ingredient.rect.move_ip(0, i*self.ingredient_offset)
-            ingredient.check.rect.center = ingredient.rect.center
-            ingredient.check.rect.move_ip(*ingredient.check_offset)
-            ingredient.check.kill()
-        self.dish.check.kill()
-
-        self.cooked = []
-
-        self.author, self.quote = quotegen(QUOTES)
-
-        self.quotes = [Quote(quote,
-                             ASSET_DIR / 'fonts' / 'pixel.ttf',
-                             15,
-                             'black')
-                        for quote 
-                        in self.split_quote(self.quote)]
+            ingredient.quote = Quote(ingredient.split_quote(self.quote, i),
+                                     ASSET_DIR / 'fonts' / 'pixel.ttf',
+                                     20,
+                                     'black')
         
     def update(self):
-        if len(self.cooked) >= 3:
-            self.dish.kill()
-            for ingredient in self.cooked:
-                ingredient.check.kill()
-                ingredient.kill()
-            self.kill()
-            
-    @staticmethod
-    def split_quote(quote):
-        quote = quote.split()
-        chunk_len = len(quote) // 3
-
-        first = ' '.join(quote[:chunk_len])
-        second = ' '.join(quote[chunk_len:2 * chunk_len])
-        third = ' '.join(quote[2 * chunk_len:])
-
-        quotes = [first, second, third]
-
-        return quotes
+        pass
 
 class Popup(pg.sprite.Sprite):
 
-    IMAGE = pg.image.load(IMAGE_DIR / 'e_hint.png').convert_alpha()
+    IMAGE = pg.image.load(IMAGE_DIR / 'e_hint.png')
 
     containers = None
 
@@ -315,13 +279,13 @@ class Button(pg.sprite.Sprite):
 
     IMAGES = {'play': pg.image.load(IMAGE_DIR
                                     / 'buttons'
-                                    / 'play.png').convert_alpha(),
+                                    / 'play.png'),
               'play_armed': pg.image.load(IMAGE_DIR
                                           / 'buttons'
-                                          / 'play_armed.png').convert_alpha(),
+                                          / 'play_armed.png'),
               'play_clicked': pg.image.load(IMAGE_DIR                                         
                                             / 'buttons'
-                                            / 'play_clicked.png').convert_alpha()}
+                                            / 'play_clicked.png')}
 
     containers = None
 
@@ -382,12 +346,3 @@ def read_tilemap(path) -> pg.Rect:
                             gridwidth * TILESIZE)
 
     return kitchen_rect
-
-class Generic(pg.sprite.Sprite):
-
-    containers = None
-
-    def __init__(self, image):
-        super().__init__(self.containers)
-        self.image = pg.image.load(image).convert_alpha()
-        self.rect = self.image.get_rect()
