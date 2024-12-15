@@ -163,7 +163,7 @@ class Quote(Text):
             self.user.image = self.font.render(self.user.text, 1, self.user.color)
 
     # Needs pg.event.get() as events
-    def type_out(self, events):
+    def handle_ipnut(self, events):
         for event in events:
             if event.type == pg.TEXTINPUT:
                 if (event.text in string.ascii_letters
@@ -178,7 +178,9 @@ class Quote(Text):
         
 
 class Timer(Text):
-
+    """
+    Times and keeps track of wrongs.
+    """
     containers = None
 
     def __init__(self, length, font, fontsize, color, bgcolor=None):
@@ -187,15 +189,26 @@ class Timer(Text):
         self.rect.center = SCREEN_RECT.center
         self.rect.move_ip(SCREEN_RECT.width // 3, 0)
         self.start = int(time.time())
-        
+    # Location of wrongs relative to center of timer.
+        self.wrong_locs = [(-50, 100), (0, 100)]
+        self.wrongs = []
 
+    def add_wrong(self):
+        """
+        When the user messes up typing, add an X below timer.
+        """
+        wrong = Status(False)
+        # Position.
+        wrong.rect.center = self.rect.center
+        wrong.rect.move_ip(self.wrong_locs[len(self.wrongs)])
+
+        self.wrongs.append(wrong)
 
     def update(self):
         now = int(time.time())
         passed = now - self.start
         self.text = str(self.length - passed)
         self.image = self.font.render(self.text, 1, self.color, self.bgcolor)
-
 
             
 class Food(pg.sprite.Sprite):
@@ -220,13 +233,22 @@ class Food(pg.sprite.Sprite):
                                           / 'tomato.png').convert_alpha()}
     
     APPLIANCE_DICT = {'burger': None,
-                  'cheese': 'c',
+                    'cheese': 'c',
                   'patty': 'o',
-                  'bun': 'o',}
+                  'bun': 'o',
+                  'taco': None,
+                  'beef': 'o',
+                  'tomato': 'c',
+                  'shell': 'o'}
+                  
+
     
     FOOD_DICT = {'burger': ['bun',
                             'patty',
-                            'cheese']}
+                            'cheese'],
+                 'taco': ['shell',
+                          'beef',
+                          'tomato']}
 
     containers = None
  
@@ -235,15 +257,24 @@ class Food(pg.sprite.Sprite):
         # ie. 'burger', 'patty'
         self.kind = kind
         self.quote = None
+        
+        self.status = Status(True) 
+        self.status_offset = (60, 0)
 
+        self.appliance = self.APPLIANCE_DICT[self.kind]
+        if self.appliance:
+            self.appliance_hint = Generic(Tile.TILE_IMAGES[self.appliance])
+            self.appliance_hint.image = pg.transform.scale_by(self.appliance_hint.image, 0.25)
+            self.appliance_hint.rect = self.appliance_hint.image.get_rect()
+            self.appliance_hint_offset = (25, 0)
+        
+    
         self.image = self.IMAGE_DICT[self.kind]
         self.rect = self.image.get_rect()
-        self.check = Generic(IMAGE_DIR / 'check.png')
-        self.check_offset = (50, 0)
 
 class Ticket(pg.sprite.Sprite):
 
-    spawn_odds = 22
+    SPAWN_ODDS = 22
 
     containers = None
 
@@ -262,16 +293,20 @@ class Ticket(pg.sprite.Sprite):
         self.dish = Food(dish)
         self.dish.rect.bottomleft = self.rect.bottomleft
 
-        self.ingredients = [Food(ingredient)
-                            for ingredient in Food.FOOD_DICT[dish]]
+        self.ingredients = [Food(ingredient) for ingredient 
+                            in Food.FOOD_DICT[dish]]
         self.ingredient_offset = 30
         for i, ingredient in enumerate(self.ingredients):
             ingredient.rect.topleft = self.rect.topleft
             ingredient.rect.move_ip(0, i*self.ingredient_offset)
-            ingredient.check.rect.center = ingredient.rect.center
-            ingredient.check.rect.move_ip(*ingredient.check_offset)
-            ingredient.check.kill()
-        self.dish.check.kill()
+            # Position the appliance hint.
+            ingredient.appliance_hint.rect.center = ingredient.rect.center
+            ingredient.appliance_hint.rect.move_ip(*ingredient.appliance_hint_offset)
+            # Position the status.
+            ingredient.status.rect.center = ingredient.rect.center
+            ingredient.status.rect.move_ip(*ingredient.status_offset)
+            ingredient.status.kill()
+        self.dish.status.kill()
 
         self.cooked = []
 
@@ -288,7 +323,8 @@ class Ticket(pg.sprite.Sprite):
         if len(self.cooked) >= 3:
             self.dish.kill()
             for ingredient in self.cooked:
-                ingredient.check.kill()
+                ingredient.status.kill()
+                ingredient.appliance_hint.kill()
                 ingredient.kill()
             self.kill()
             
@@ -305,6 +341,7 @@ class Ticket(pg.sprite.Sprite):
 
         return quotes
 
+
 class Popup(pg.sprite.Sprite):
 
     IMAGE = pg.image.load(IMAGE_DIR / 'e_hint.png').convert_alpha()
@@ -320,6 +357,7 @@ class Popup(pg.sprite.Sprite):
 
     def update(self):
         pass
+
 
 class Button(pg.sprite.Sprite):
 
@@ -357,14 +395,22 @@ class Button(pg.sprite.Sprite):
     def change_image(self, image: str):
         self.image = self.images[image]
 
-class Generic(pg.sprite.Sprite):
+
+class Status(pg.sprite.Sprite):
+
+    IMAGES = {'check': pg.image.load(IMAGE_DIR / 'check.png'),
+              'x': pg.image.load(IMAGE_DIR / 'x.png')}
 
     containers = None
 
-    def __init__(self, image):
+    def __init__(self, isCheck):
         super().__init__(self.containers)
-        self.image = pg.image.load(image).convert_alpha()
+        if isCheck:
+            self.image = self.IMAGES['check']
+        else:
+            self.image = self.IMAGES['x']
         self.rect = self.image.get_rect()
+
 
 def read_tilemap(path) -> pg.Rect:
     with open(path, 'r', encoding='utf-8') as infile:
@@ -402,3 +448,56 @@ def read_tilemap(path) -> pg.Rect:
 
     return kitchen_rect
 
+class Generic(pg.sprite.Sprite):
+    """
+    For any type of image that needs to be blitted onto the screen, but with
+    wrapped in a class for sprite-like control.
+    """
+
+    containers = None
+
+    def __init__(self, image):
+        super().__init__(self.containers)
+        self.image = image
+        self.rect = self.image.get_rect()
+
+class ShiftClock(Text):
+    """
+    Manages 9 to 5 shift.
+
+    Parameters:
+    ---
+    - secs: pg.time.get_ticks // 1000
+    """
+
+    containers = None
+
+    def __init__(self, text, font, fontsize, color, bgcolor=None):
+        super().__init__(text, font, fontsize, color, bgcolor)
+        self.hour = 9
+        self.secs = None
+        self.tick = False
+
+    def update(self):
+        self.secs = pg.time.get_ticks() // 1000
+        print(self.secs % 30)
+        self.change_time()
+
+
+
+    def change_time(self):
+        if self.hour > 12:
+            self.hour -= 12
+        if ((self.secs % 30 == 0) and
+            self.secs > 0 and
+            not self.tick):
+            self.tick = not self.tick
+            self.hour += 1
+        if (not self.secs % 30 == 0) and self.tick:
+            self.tick = not self.tick
+        self.text = str(self.hour) + ':00'
+        self.image = self.font.render(self.text, 1,
+                                      self.color, self.bgcolor)
+        self.rect = self.image.get_rect()
+        self.rect.topright = SCREEN_RECT.topright
+        
