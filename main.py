@@ -1,4 +1,6 @@
 # TODO: change syntax for button and interactions to foo.is_pressed(pg.K_foo)
+# TODO: clock from 9-5, increment by 30 every 10 secs. Day ends at 5.
+# TODO: money from tickets according to dish quality.
 
 import pygame as pg
 import random
@@ -63,12 +65,17 @@ kitchen_rect = read_tilemap(ASSET_DIR / 'map.txt')
 player = Player()
 play = Button('play')
 
+
 running = True
 while running:
+    
+
     events = pg.event.get()
     for event in events:
         if event.type == pg.QUIT:
             running = False
+
+    secs = pg.time.get_ticks() // 1000
 
     keys = pg.key.get_pressed()
     mouse = pg.mouse.get_pressed()
@@ -196,24 +203,6 @@ while running:
                         quote.add(cook_group)
                         global_state = Gamestate.TYPING
 
-        # for appliance in appliances:
-        #     if appliance.zone.colliderect(player) and appliance is closest:
-        #         appliance.popup.add(Popup.containers)
-        #         for ticket in tickets:
-        #             if ticket.ingredients:
-        #                 for ingredient in ticket.ingredients:
-        #                     ingr_app = ingredient.APPLIANCE_DICT[ingredient.kind]
-        #                     print(ingr_app)
-        #                 if (ingr_app == appliance.kind and
-        #                     interaction):
-        #                     cooked_ticket = ticket
-        #                     cooked = ingredient
-        #                     quote = ticket.quotes[0]
-        #                     quote.add(cook_group)
-        #                     global_state = Gamestate.TYPING
-        #     else:
-        #         appliance.popup.kill()
-
         pause = keys[pg.K_ESCAPE]        
 
     elif global_state == Gamestate.TYPING:
@@ -228,7 +217,6 @@ while running:
         cook_timer.draw(screen)
         # Put this before pg.display.flip()
         all_sprites.update()
-
 
         quote.type_out(events)
         if not cook_timer:
@@ -260,9 +248,7 @@ while running:
             timer.kill()
             global_state = Gamestate.PLAYING
 
-    print(clock.get_fps())
     pg.display.flip()
     clock.tick(FPS)
     
-
 pg.quit()

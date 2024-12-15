@@ -1,4 +1,5 @@
 import time
+import datetime
 import string
 from abc import ABC
 import pygame as pg
@@ -7,6 +8,7 @@ from paths import *
 from constants import *
 from src.gamestate import Gamestate
 from src.services import quotegen
+
 
 # Every sprite must have a 'containers' class variable.
 # TODO: should images be stored outside of class,
@@ -173,6 +175,7 @@ class Quote(Text):
             elif (event.type == pg.KEYDOWN and
                   event.key == pg.K_BACKSPACE):
                     self.user.text = self.user.text[:-1]
+        
 
 class Timer(Text):
 
@@ -184,7 +187,9 @@ class Timer(Text):
         self.rect.center = SCREEN_RECT.center
         self.rect.move_ip(SCREEN_RECT.width // 3, 0)
         self.start = int(time.time())
-  
+        
+
+
     def update(self):
         now = int(time.time())
         passed = now - self.start
@@ -196,20 +201,23 @@ class Timer(Text):
 class Food(pg.sprite.Sprite):
 
     IMAGE_DICT = {'burger': pg.image.load(IMAGE_DIR
-                                          / 'burger'
                                           / 'burger.png').convert_alpha(),
                   'cheese': pg.image.load(IMAGE_DIR
-                                          / 'burger'
                                           / 'cheese.png').convert_alpha(),
                   'patty': pg.image.load(IMAGE_DIR
-                                          / 'burger'
                                           / 'patty.png').convert_alpha(),
                   'bun': pg.image.load(IMAGE_DIR
-                                          / 'burger'
                                           / 'bun.png').convert_alpha(),
                   'patty': pg.image.load(IMAGE_DIR
-                                          / 'burger'
-                                          / 'patty.png').convert_alpha()}
+                                          / 'patty.png').convert_alpha(),
+                  'taco': pg.image.load(IMAGE_DIR
+                                          / 'taco.png').convert_alpha(),
+                'beef': pg.image.load(IMAGE_DIR
+                                          / 'beef.png').convert_alpha(),
+                'shell': pg.image.load(IMAGE_DIR
+                                          / 'shell.png').convert_alpha(),
+                'tomato': pg.image.load(IMAGE_DIR
+                                          / 'tomato.png').convert_alpha()}
     
     APPLIANCE_DICT = {'burger': None,
                   'cheese': 'c',
@@ -234,6 +242,8 @@ class Food(pg.sprite.Sprite):
         self.check_offset = (50, 0)
 
 class Ticket(pg.sprite.Sprite):
+
+    spawn_odds = 22
 
     containers = None
 
@@ -347,6 +357,15 @@ class Button(pg.sprite.Sprite):
     def change_image(self, image: str):
         self.image = self.images[image]
 
+class Generic(pg.sprite.Sprite):
+
+    containers = None
+
+    def __init__(self, image):
+        super().__init__(self.containers)
+        self.image = pg.image.load(image).convert_alpha()
+        self.rect = self.image.get_rect()
+
 def read_tilemap(path) -> pg.Rect:
     with open(path, 'r', encoding='utf-8') as infile:
             tilemap = infile.read().splitlines()
@@ -383,11 +402,3 @@ def read_tilemap(path) -> pg.Rect:
 
     return kitchen_rect
 
-class Generic(pg.sprite.Sprite):
-
-    containers = None
-
-    def __init__(self, image):
-        super().__init__(self.containers)
-        self.image = pg.image.load(image).convert_alpha()
-        self.rect = self.image.get_rect()
