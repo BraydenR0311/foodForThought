@@ -1,5 +1,5 @@
 import time
-import datetime
+import random
 import string
 from abc import ABC
 import pygame as pg
@@ -278,15 +278,17 @@ class Ticket(pg.sprite.Sprite):
 
     containers = None
 
-    def __init__(self, dish):
+    def __init__(self, dish, xoffset, num_alive):
         super().__init__(self.containers)
         self.size = (100, 150)
-        self.offset = 10
+        self.yoffset = 10
+        self.xoffset = xoffset
         
         self.image = pg.Surface(self.size)
         self.image.fill('white')
         self.rect = self.image.get_rect()
-        self.rect.move_ip(self.offset, self.offset)
+        self.rect.move_ip(self.xoffset + (num_alive * (self.xoffset + self.image.width)),
+                          self.yoffset)
         
         self.author, self.quote = quotegen(QUOTES)
 
@@ -340,6 +342,28 @@ class Ticket(pg.sprite.Sprite):
         quotes = [first, second, third]
 
         return quotes
+
+
+class TicketManager:
+    def __init__(self, spawnrate, max_tickets):
+        """
+        Parameters:
+        ---
+        - spawnrate: seconds before next spawn.
+        - group: ticket container.
+        - max_tickets: max num of tickets on screen.
+        """
+        self.spawnrate = spawnrate
+        self.max_tickets = max_tickets
+        self.choices = list(Food.FOOD_DICT.keys())
+        self.spawning = False
+
+    def spawn_ticket(self, group, xoffset):
+        if len(group) <= self.max_tickets:
+            food = random.choice(self.choices)
+            Ticket(food, xoffset, len(group))
+
+
 
 
 class Popup(pg.sprite.Sprite):

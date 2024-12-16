@@ -55,9 +55,10 @@ player = Player()
 play = Button('play')
 shiftclock = ShiftClock('9:00', ASSET_DIR / 'fonts' / 'pixel.ttf',
            20, 'black')
-
+ticketmanager = TicketManager(15, 8)
 
 running = True
+
 while running:
     
 
@@ -163,11 +164,13 @@ while running:
         # Keep chef in the kitchen.
         player.rect.clamp_ip(kitchen_rect)
 
-
-         # Generate tickets
-        # TODO: generate tickets dynamically
-        if not tickets:
-            foo = Ticket('taco')
+        # Generate tickets
+        # TODO: Wrap this logic within spawn_ticket().
+        if not ticketmanager.spawning and not secs % ticketmanager.spawnrate:
+            ticketmanager.spawn_ticket(tickets, 10)
+            ticketmanager.spawning = True
+        elif ticketmanager.spawning and secs % ticketmanager.spawnrate:
+            ticketmanager.spawning = False
 
         # Manage interaction between player and appliances.
         interaction = keys[pg.K_e]
