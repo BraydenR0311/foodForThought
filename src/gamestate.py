@@ -7,4 +7,4 @@ class Gamestate(Enum):
     TYPING = auto()
 
 # TODO: Change to MAIN_MENU
-global_state = Gamestate.PLAYING
+global_state = Gamestate.MAIN_MENU
