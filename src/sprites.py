@@ -259,56 +259,54 @@ class Food(pg.sprite.Sprite):
         self.quote = None
         
         self.status = Status(True) 
-        self.status_offset = (60, 0)
 
         self.appliance = self.APPLIANCE_DICT[self.kind]
         if self.appliance:
             self.appliance_hint = Generic(Tile.TILE_IMAGES[self.appliance])
             self.appliance_hint.image = pg.transform.scale_by(self.appliance_hint.image, 0.25)
-            self.appliance_hint.rect = self.appliance_hint.image.get_rect()
-            self.appliance_hint_offset = (25, 0)
-        
+            self.appliance_hint.rect = self.appliance_hint.image.get_rect()        
     
         self.image = self.IMAGE_DICT[self.kind]
         self.rect = self.image.get_rect()
 
 class Ticket(pg.sprite.Sprite):
 
-    SPAWN_ODDS = 22
-
     containers = None
 
-    def __init__(self, dish, xoffset, num_alive):
+    def __init__(self, dish):
         super().__init__(self.containers)
+        # Quote to type out. Author for ticket title.
+        self.author, self.quote = quotegen(QUOTES)
+        # Dimensions of ticket.
         self.size = (100, 150)
-        self.yoffset = 10
-        self.xoffset = xoffset
+
+        # Offsets for positioning
+        self.offset = 10 # Distance from edge of screen and other tickets.
+        self.ingredient_offset = 5
+        self.status_offset = 5
+        self.appliance_hint_offset = 5
         
         self.image = pg.Surface(self.size)
         self.image.fill('white')
         self.rect = self.image.get_rect()
-        self.rect.move_ip(self.xoffset + (num_alive * (self.xoffset + self.image.width)),
-                          self.yoffset)
-        
-        self.author, self.quote = quotegen(QUOTES)
 
         self.dish = Food(dish)
         self.dish.rect.bottomleft = self.rect.bottomleft
 
-        self.ingredients = [Food(ingredient) for ingredient 
-                            in Food.FOOD_DICT[dish]]
-        self.ingredient_offset = 30
-        for i, ingredient in enumerate(self.ingredients):
-            ingredient.rect.topleft = self.rect.topleft
-            ingredient.rect.move_ip(0, i*self.ingredient_offset)
-            # Position the appliance hint.
-            ingredient.appliance_hint.rect.center = ingredient.rect.center
-            ingredient.appliance_hint.rect.move_ip(*ingredient.appliance_hint_offset)
-            # Position the status.
-            ingredient.status.rect.center = ingredient.rect.center
-            ingredient.status.rect.move_ip(*ingredient.status_offset)
-            ingredient.status.kill()
-        self.dish.status.kill()
+        # self.ingredients = [Food(ingredient) for ingredient 
+        #                     in Food.FOOD_DICT[dish]]
+        # self.ingredient_offset = 30
+        # for i, ingredient in enumerate(self.ingredients):
+        #     ingredient.rect.topleft = self.rect.topleft
+        #     ingredient.rect.move_ip(0, i*self.ingredient_offset)
+        #     # Position the appliance hint.
+        #     ingredient.appliance_hint.rect.center = ingredient.rect.center
+        #     ingredient.appliance_hint.rect.move_ip(*ingredient.appliance_hint_offset)
+        #     # Position the status.
+        #     ingredient.status.rect.center = ingredient.rect.center
+        #     ingredient.status.rect.move_ip(*ingredient.status_offset)
+        #     ingredient.status.kill()
+        # self.dish.status.kill()
 
         self.cooked = []
 
@@ -345,7 +343,7 @@ class Ticket(pg.sprite.Sprite):
 
 
 class TicketManager:
-    def __init__(self, spawnrate, max_tickets):
+    def __init__(self, spawnrate: int, max_tickets: int):
         """
         Parameters:
         ---
@@ -358,10 +356,33 @@ class TicketManager:
         self.choices = list(Food.FOOD_DICT.keys())
         self.spawning = False
 
-    def spawn_ticket(self, group, xoffset):
-        if len(group) <= self.max_tickets:
-            food = random.choice(self.choices)
-            Ticket(food, xoffset, len(group))
+        # Objects to be updated through the main loop.
+        self.group = None
+        self.shiftclock = None
+
+    def update(self, group: pg.sprite.Group, shiftclock):
+        self.group = group
+        self.shiftclock = shiftclock
+        
+        self.spawn_tickets()
+        self.manage_locations()
+
+    def spawn_tickets(self):
+        if (not self.spawning and
+            not self.shiftclock.secs % self.spawnrate
+            and len(self.group) <= self.max_tickets):
+                food = random.choice(self.choices)
+                Ticket(food)
+                self.spawning = True
+        elif (self.spawning and
+              self.shiftclock.secs % self.spawnrate):
+            self.spawning = False
+
+    def manage_locations(self):
+        for i, ticket in enumerate(reversed(self.group.sprites())):
+            # Position tickets.
+            ticket.rect.topleft = (ticket.offset + i*(ticket.rect.width + ticket.offset),
+                              ticket.offset) 
 
 
 

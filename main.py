@@ -1,5 +1,6 @@
 # TODO: change syntax for button and interactions to foo.is_pressed(pg.K_foo)
 # TODO: clock from 9-5, increment by 30 every 10 secs. Day ends at 5.
+# TODO: Update ticket locations as tickets are completed
 # TODO: money from tickets according to dish quality.
 
 import pygame as pg
@@ -53,21 +54,19 @@ ShiftClock.containers = shiftclock_group, all_sprites
 kitchen_rect = read_tilemap(ASSET_DIR / 'map.txt')
 player = Player()
 play = Button('play')
+quit_game = Button('quit')
 shiftclock = ShiftClock('9:00', ASSET_DIR / 'fonts' / 'pixel.ttf',
-           20, 'black')
+                        20, 'black')
 ticketmanager = TicketManager(15, 8)
 
 running = True
 
 while running:
-    
 
     events = pg.event.get()
     for event in events:
         if event.type == pg.QUIT:
             running = False
-
-    secs = pg.time.get_ticks() // 1000
 
     keys = pg.key.get_pressed()
     mouse = pg.mouse.get_pressed()
@@ -90,25 +89,31 @@ while running:
             armed = button.rect.collidepoint(mouse_pos)
             # Nothing done to button.
             if not armed and not click:
-                button.change_image('play')
+                button.armed = False
+                button.unarm()
                 button.clicked = False
             # Mouse is hovering.
-            if armed:
-                button.change_image('play_armed')
+            if armed and not button.armed:
+                button.armed = True
+                button.arm()
             # Hovering and left click held.
-            if armed and click:
-                button.change_image('play_clicked')
+            if armed and click and not button.clicked:
+                button.click()
                 button.clicked = True  
             # Activate button.
             if armed and not click and button.clicked:
                 button.clicked = False
-                global_state = Gamestate.PLAYING
-
-
+                if button.kind == 'play':
+                    shiftclock.start_time()
+                    global_state = Gamestate.PLAYING
+                elif button.kind == 'quit':
+                    running = False
 
     elif global_state == Gamestate.PLAYING:
-
-        # Draw objects
+        # After a certain amount of time, generate a ticket.
+        ticketmanager.update(tickets, shiftclock)
+        
+        # Draw objects.
         SCREEN.blit(background)
 
         kitchen.draw(screen)
@@ -164,13 +169,7 @@ while running:
         # Keep chef in the kitchen.
         player.rect.clamp_ip(kitchen_rect)
 
-        # Generate tickets
-        # TODO: Wrap this logic within spawn_ticket().
-        if not ticketmanager.spawning and not secs % ticketmanager.spawnrate:
-            ticketmanager.spawn_ticket(tickets, 10)
-            ticketmanager.spawning = True
-        elif ticketmanager.spawning and secs % ticketmanager.spawnrate:
-            ticketmanager.spawning = False
+       
 
         # Manage interaction between player and appliances.
         interaction = keys[pg.K_e]
@@ -190,8 +189,9 @@ while running:
 
         if interaction:
             # First elligible ingredient wanted.
-            for ticket in tickets:
-                for ingredient in ticket.ingredients:
+            for ticket in reversed(tickets.sprites()): # Reversing gives oldest first.
+                print(ticket.dish.kind)
+                for ingredient in reversed(ticket.ingredients):
                     ingr_appliance = ingredient.APPLIANCE_DICT[ingredient.kind]
                     # Find ingredient for the interacted appliance.
                     if ingr_appliance == closest.kind:
@@ -204,6 +204,9 @@ while running:
         pause = keys[pg.K_ESCAPE]        
 
     elif global_state == Gamestate.TYPING:
+        # Continue spawning tickets even while typing
+        ticketmanager.spawn_tickets(tickets, shiftclock, 10)
+
         SCREEN.blit(background)
         kitchen.draw(screen)
         players.draw(screen)
