@@ -8,7 +8,7 @@
    version="1.1"
    id="svg1"
    inkscape:version="1.4 (e7c3feb100, 2024-10-09)"
-   sodipodi:docname="play.svg"
+   sodipodi:docname="quit.svg"
    inkscape:export-filename="../../images/buttons/play.png"
    inkscape:export-xdpi="96"
    inkscape:export-ydpi="96"
@@ -60,6 +60,6 @@
          id="tspan1"
          style="font-size:13.2073px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.687883"
          x="28.522188"
-         y="16.89253">Play</tspan></text>
+         y="16.89253">Quit</tspan></text>
   </g>
 </svg>

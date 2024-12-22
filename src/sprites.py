@@ -6,7 +6,7 @@ import pygame as pg
 
 from paths import *
 from constants import *
-from src.gamestate import Gamestate
+from src.gamestate import global_state, Gamestate
 from src.services import quotegen
 
 
@@ -243,7 +243,7 @@ class Food(pg.sprite.Sprite):
                   
 
     
-    FOOD_DICT = {'burger': ['bun',
+    DISH_DICT = {'burger': ['bun',
                             'patty',
                             'cheese'],
                  'taco': ['shell',
@@ -273,7 +273,7 @@ class Ticket(pg.sprite.Sprite):
 
     containers = None
 
-    def __init__(self, dish):
+    def __init__(self, dishname):
         super().__init__(self.containers)
         # Quote to type out. Author for ticket title.
         self.author, self.quote = quotegen(QUOTES)
@@ -282,16 +282,15 @@ class Ticket(pg.sprite.Sprite):
 
         # Offsets for positioning
         self.offset = 10 # Distance from edge of screen and other tickets.
-        self.ingredient_offset = 5
-        self.status_offset = 5
-        self.appliance_hint_offset = 5
+        self.suboffset = 5 # Offset for attributes (ingredient, appliance hint, etc.)
         
         self.image = pg.Surface(self.size)
         self.image.fill('white')
         self.rect = self.image.get_rect()
 
-        self.dish = Food(dish)
-        self.dish.rect.bottomleft = self.rect.bottomleft
+        self.dishname = dishname
+        self.dish = Food(self.dishname)
+        self.ingredients = self._get_ingredients(Food.DISH_DICT)
 
         # self.ingredients = [Food(ingredient) for ingredient 
         #                     in Food.FOOD_DICT[dish]]
@@ -327,6 +326,11 @@ class Ticket(pg.sprite.Sprite):
                 ingredient.appliance_hint.kill()
                 ingredient.kill()
             self.kill()
+
+    def _get_ingredients(self, dish_ingr_map):
+        return [Food(ingredient) for ingredient in dish_ingr_map[self.dishname]]
+
+         
             
     @staticmethod
     def split_quote(quote):
@@ -353,7 +357,7 @@ class TicketManager:
         """
         self.spawnrate = spawnrate
         self.max_tickets = max_tickets
-        self.choices = list(Food.FOOD_DICT.keys())
+        self.choices = list(Food.DISH_DICT.keys())
         self.spawning = False
 
         # Objects to be updated through the main loop.
@@ -381,8 +385,40 @@ class TicketManager:
     def manage_locations(self):
         for i, ticket in enumerate(reversed(self.group.sprites())):
             # Position tickets.
-            ticket.rect.topleft = (ticket.offset + i*(ticket.rect.width + ticket.offset),
-                              ticket.offset) 
+            ticket.rect.topleft = (
+                ticket.offset + i*(ticket.rect.width + ticket.offset),
+                ticket.offset
+            )
+            # Position ingredients.
+            previous_ingredient = None
+            for ingredient in ticket.ingredients:
+                if not previous_ingredient:
+                    # Position ingredient icon.
+                    ingredient.rect.topleft = ticket.rect.topleft
+                    ingredient.rect.move_ip(
+                        ticket.suboffset,
+                        ticket.suboffset
+                    )
+                else:
+                    # Position according to last ingredient
+                    ingredient.rect.topleft = previous_ingredient.rect.bottomleft
+                    ingredient.rect.move_ip(
+                        0, # Already aligned.
+                        ticket.suboffset
+                    )
+                previous_ingredient = ingredient
+                # Position appliance hint.
+                ingredient.appliance_hint.rect.midleft = ingredient.rect.midright
+                ingredient.appliance_hint.rect.move_ip(
+                    ticket.suboffset,
+                    0 # Already aligned vertically.
+                )
+                # Position status
+                ingredient.status.rect.midleft = ingredient.appliance_hint.rect.midright
+                ingredient.status.rect.move_ip(
+                    ticket.suboffset,
+                    0
+                    )
 
 
 
@@ -409,36 +445,40 @@ class Button(pg.sprite.Sprite):
     IMAGES = {'play': pg.image.load(IMAGE_DIR
                                     / 'buttons'
                                     / 'play.png').convert_alpha(),
-              'play_armed': pg.image.load(IMAGE_DIR
-                                          / 'buttons'
-                                          / 'play_armed.png').convert_alpha(),
-              'play_clicked': pg.image.load(IMAGE_DIR                                         
+
+              'quit': pg.image.load(IMAGE_DIR                                         
                                             / 'buttons'
-                                            / 'play_clicked.png').convert_alpha()}
+                                            / 'quit.png').convert_alpha()}
 
     containers = None
 
-    def __init__(self, button_type: str):
+    def __init__(self, kind: str):
         super().__init__(self.containers)
-        self.button_type = button_type
-        self.image = self.IMAGES[self.button_type]
+        self.kind = kind
+        self.image = self.IMAGES[self.kind]
         self.rect = self.align_rect()
         self.clicked = False
+        self.armed = False
 
     def align_rect(self) -> pg.Rect:
         rect = self.image.get_rect()
         rect.center = SCREEN_RECT.center
 
         distance = 150
-        if self.button_type == 'play':
+        if self.kind == 'play':
             rect.move_ip(0, -distance)
-        if self.button_type == 'quit':
+        if self.kind == 'quit':
             rect.move_ip(0, distance)
-    
         return rect
     
-    def change_image(self, image: str):
-        self.image = self.images[image]
+    def arm(self):
+        self.image = pg.transform.hsl(self.image, lightness = -.2)
+        
+    def unarm(self):
+        self.image = self.IMAGES[self.kind]
+
+    def click(self):
+        self.image = pg.transform.hsl(self.image, lightness = -.3)
 
 
 class Status(pg.sprite.Sprite):
@@ -520,13 +560,18 @@ class ShiftClock(Text):
     def __init__(self, text, font, fontsize, color, bgcolor=None):
         super().__init__(text, font, fontsize, color, bgcolor)
         self.hour = 9
-        self.secs = None
+        self.secs = 0
         self.tick = False
+        self.starttime = 0
 
     def update(self):
-        self.secs = pg.time.get_ticks() // 1000
-        print(self.secs % 30)
+
+        self.secs = int(time.time() - self.starttime)
         self.change_time()
+    
+    def start_time(self):
+        self.starttime = time.time()
+
 
 
 

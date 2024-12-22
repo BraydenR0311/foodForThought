@@ -205,7 +205,8 @@ while running:
 
     elif global_state == Gamestate.TYPING:
         # Continue spawning tickets even while typing
-        ticketmanager.spawn_tickets(tickets, shiftclock, 10)
+        ticketmanager.update(tickets, shiftclock)
+
 
         SCREEN.blit(background)
         kitchen.draw(screen)
@@ -219,7 +220,6 @@ while running:
         shiftclock_group.draw(screen)
         generics.draw(screen)
         # Put this before pg.display.flip()
-        all_sprites.update()
 
         quote.handle_ipnut(events)
         if not cook_timer:

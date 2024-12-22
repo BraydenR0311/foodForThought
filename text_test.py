@@ -70,28 +70,58 @@ class Quote(Text):
                   event.key == pg.K_BACKSPACE):
                     self.user.text = self.user.text[:-1]
 
+class Bar(pg.sprite.Sprite):
+
+    containers = None
+
+    def __init__(self):
+        super().__init__(self.containers)
+        self.size = (50,20)
+        self.image = pg.image.load('assets/images/shell.png')
+        self.rect = self.image.get_rect()
+
+class Foo(pg.sprite.Sprite):
+
+    containers = None
+
+    def __init__(self):
+        super().__init__(self.containers)
+        self.size = (100,200)
+        self.image = pg.image.load('assets/images/pantry.png')
+        self.rect = self.image.get_rect()
+        self.thing = Bar()
+
+
 all_sprites = pg.sprite.Group()
-foo = pg.sprite.Group()
+bar = pg.sprite.Group()
 
 Text.containers = all_sprites
 Quote.containers = all_sprites
 
-text = Quote('Quality is not an act, it is a habit.', ASSET_DIR / 'fonts' / 'pixel.ttf', 13, 'black')
+Bar.containers = bar
+Foo.containers = all_sprites
 
+
+
+foo = Foo()
 
 screen.fill('white')
-
 while running:
     events = pg.event.get()
     for event in events:
         if event.type == pg.QUIT:
             running = False
-    text.type_out(events)
-    
+
+    keys = pg.key.get_pressed()
+    if keys[pg.K_w]:
+        foo.thing.rect.move_ip(0, -2)
+    elif keys[pg.K_s]:
+        foo.thing.rect.move_ip(0, 2)
 
     all_sprites.draw(screen)
+    bar.draw(foo.image)
     all_sprites.update()
-
+    bar.update()
 
     pg.display.flip()
     clock.tick(60)
