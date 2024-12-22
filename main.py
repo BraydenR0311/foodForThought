@@ -7,10 +7,20 @@ import pygame as pg
 import random
 from paths import *
 from constants import *
-
 from src.gamestate import Gamestate, global_state
+from src.utils.utilities import read_tilemap
 
-from src.sprites import *
+#TODO: Replace Status and Popup to Generic
+from src.components.button import Button
+from src.components.food import Food
+from src.components.generic import Generic
+from src.components.player import Player
+from src.components.shiftclock import ShiftClock
+from src.components.status import Status, Popup
+from src.components.text import Text, Quote
+from src.components.ticket import Ticket, TicketManager
+from src.components.tiles import Floor, Appliance
+from src.components.timer import Timer
 
 pg.init()
 screen = pg.display.set_mode((WIDTH, HEIGHT))
@@ -51,7 +61,7 @@ Generic.containers = generics, all_sprites
 ShiftClock.containers = shiftclock_group, all_sprites
 
 # Initialize objects.
-kitchen_rect = read_tilemap(ASSET_DIR / 'map.txt')
+kitchen_rect = read_tilemap(ASSET_DIR / 'map.txt', Floor, Appliance)
 player = Player()
 play = Button('play')
 quit_game = Button('quit')
