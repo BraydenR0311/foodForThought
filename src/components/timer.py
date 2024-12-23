@@ -2,9 +2,10 @@ import time
 
 import pygame as pg
 
-from constants import *
 from paths import *
 from src.components.text import Text
+from utils.utils import get_screen_rect
+from src.components.status import Status
 
 class Timer(Text):
     """
@@ -15,8 +16,8 @@ class Timer(Text):
     def __init__(self, length, font, fontsize, color, bgcolor=None):
         super().__init__(length, font, fontsize, color, bgcolor)
         self.length = length
-        self.rect.center = SCREEN_RECT.center
-        self.rect.move_ip(SCREEN_RECT.width // 3, 0)
+        self.rect.center = get_screen_rect().center
+        self.rect.move_ip(get_screen_rect().width // 3, 0)
         self.start = int(time.time())
     # Location of wrongs relative to center of timer.
         self.wrong_locs = [(-50, 100), (0, 100)]

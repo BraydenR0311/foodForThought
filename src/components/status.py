@@ -1,6 +1,5 @@
 import pygame as pg
 
-from constants import *
 from paths import *
 
 class Status(pg.sprite.Sprite):

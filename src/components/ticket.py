@@ -1,7 +1,11 @@
+import random
+
 import pygame as pg
 
-from constants import *
 from paths import *
+from config import quotegen
+from src.components.food import Food
+from src.components.text import Quote
 
 class Ticket(pg.sprite.Sprite):
 
@@ -10,7 +14,7 @@ class Ticket(pg.sprite.Sprite):
     def __init__(self, dishname):
         super().__init__(self.containers)
         # Quote to type out. Author for ticket title.
-        self.author, self.quote = quotegen(QUOTES)
+        self.author, self.quote = None
         # Dimensions of ticket.
         self.size = (100, 150)
 
@@ -42,9 +46,6 @@ class Ticket(pg.sprite.Sprite):
         # self.dish.status.kill()
 
         self.cooked = []
-
-        self.author, self.quote = quotegen(QUOTES)
-
         self.quotes = [Quote(quote,
                              ASSET_DIR / 'fonts' / 'pixel.ttf',
                              15,
@@ -79,8 +80,11 @@ class Ticket(pg.sprite.Sprite):
 
         return quotes
     
+    def set_quote(self, quotes):
+        self.author, self.quotes = quotegen(quotes)
+    
 class TicketManager:
-    def __init__(self, spawnrate: int, max_tickets: int):
+    def __init__(self, spawnrate: int, max_tickets: int, quotes):
         """
         Parameters:
         ---
@@ -90,6 +94,7 @@ class TicketManager:
         """
         self.spawnrate = spawnrate
         self.max_tickets = max_tickets
+        self.quotes = quotes
         self.choices = list(Food.DISH_DICT.keys())
         self.spawning = False
 
@@ -109,7 +114,9 @@ class TicketManager:
             not self.shiftclock.secs % self.spawnrate
             and len(self.group) <= self.max_tickets):
                 food = random.choice(self.choices)
-                Ticket(food)
+                ticket = Ticket(food)
+                ticket.set_quote(self.quotes)
+                ticket.set_quote()
                 self.spawning = True
         elif (self.spawning and
               self.shiftclock.secs % self.spawnrate):

@@ -1,7 +1,9 @@
+import string
+
 import pygame as pg
 
 from paths import *
-from constants import *
+from utils.utils import get_screen_rect
 
 class Text(pg.sprite.Sprite):
 
@@ -24,8 +26,8 @@ class Quote(Text):
         super().__init__(text, font, fontsize, color, bgcolor)
         # User input used to color text.
         self.user = Text('', font, fontsize, 'green')
-        self.rect.center = SCREEN_RECT.center
-        self.rect = self.rect.move(0, +SCREEN_RECT.height // 3)
+        self.rect.center = get_screen_rect().center
+        self.rect = self.rect.move(0, get_screen_rect().height // 3)
         self.user.rect = self.rect
         self.wrongs = 0
         self.wronged = False

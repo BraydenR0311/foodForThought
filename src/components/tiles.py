@@ -9,7 +9,7 @@ from src.components.status import Popup
 # Only inherited from.
 class Tile(ABC):
 
-    TILE_IMAGES = {
+    IMAGES = {
         '#': pg.image.load(IMAGE_DIR / 'floor.png').convert_alpha(),
         'x': pg.image.load(IMAGE_DIR / 'floor.png').convert_alpha(),
         'f': pg.image.load(IMAGE_DIR / 'fryer.png').convert_alpha(),
@@ -24,7 +24,7 @@ class Tile(ABC):
         super().__init__()
         self.kind = kind
         # Will overwrite this rect immediately.
-        self.image = self.TILE_IMAGES[self.kind]
+        self.image = self.IMAGES[self.kind]
         self.rect = rect
         if self.containers == None:
             raise ValueError('Must define groups for this class.')

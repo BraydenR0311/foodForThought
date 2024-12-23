@@ -1,7 +1,9 @@
 import pygame as pg
 
-from constants import *
 from paths import *
+from src.components.status import Status
+from src.components.generic import Generic
+from src.components.tiles import Tile
 
 class Food(pg.sprite.Sprite):
 
@@ -54,7 +56,8 @@ class Food(pg.sprite.Sprite):
 
         self.appliance = self.APPLIANCE_DICT[self.kind]
         if self.appliance:
-            self.appliance_hint = Generic(Tile.TILE_IMAGES[self.appliance])
+            # TODO: Access tileimages through class method
+            self.appliance_hint = Generic(Tile.IMAGES[self.appliance])
             self.appliance_hint.image = pg.transform.scale_by(self.appliance_hint.image, 0.25)
             self.appliance_hint.rect = self.appliance_hint.image.get_rect()        
     

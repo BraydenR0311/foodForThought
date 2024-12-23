@@ -1,7 +1,7 @@
 import pygame as pg
 
 from paths import *
-from constants import *
+from utils.utils import get_screen_rect
 
 class Button(pg.sprite.Sprite):
 
@@ -23,13 +23,20 @@ class Button(pg.sprite.Sprite):
         self.clicked = False
         self.armed = False
 
+    # TODO: don't return, just directly access rect
     def align_rect(self) -> pg.Rect:
         rect = self.image.get_rect()
-        rect.center = SCREEN_RECT.center
+        rect.center = get_screen_rect().center
 
         distance = 150
         if self.kind == 'play':
-            rect.move_ip(pg.transform.hsl(self.image, lightness = -.2))
+            rect.move_ip(0, -distance)
+        if self.kind == 'quit':
+            rect.move_ip(0, distance)
+        return rect
+    
+    def arm(self):
+        self.image = pg.transform.hsl(self.image, lightness = -.2)
 
     def unarm(self):
         self.image = self.IMAGES[self.kind]

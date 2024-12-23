@@ -6,9 +6,9 @@
 import pygame as pg
 import random
 from paths import *
-from constants import *
-from src.gamestate import Gamestate, global_state
-from src.utils.utilities import read_tilemap
+from src.config import Config
+from utils.utils import read_tilemap, quoteread
+from utils.gamemanager import GameManager, State
 
 #TODO: Replace Status and Popup to Generic
 from src.components.button import Button
@@ -23,9 +23,11 @@ from src.components.tiles import Floor, Appliance
 from src.components.timer import Timer
 
 pg.init()
-screen = pg.display.set_mode((WIDTH, HEIGHT))
-clock = pg.time.Clock()
 
+# Initialize game manager object.
+game_manager = GameManager()
+game_manager.load_screen() 
+screen = pg.display.set_mode((Config.WIDTH, Config.HEIGHT))
 background = pg.image.load(IMAGE_DIR / 'background.png').convert()
 
 # Create groups.
@@ -65,14 +67,13 @@ kitchen_rect = read_tilemap(ASSET_DIR / 'map.txt', Floor, Appliance)
 player = Player()
 play = Button('play')
 quit_game = Button('quit')
-shiftclock = ShiftClock('9:00', ASSET_DIR / 'fonts' / 'pixel.ttf',
-                        20, 'black')
-ticketmanager = TicketManager(15, 8)
+shiftclock = ShiftClock(
+    '9:00', ASSET_DIR / 'fonts' / 'pixel.ttf', 20, 'black'
+)
+ticketmanager = TicketManager(15, 8, game_manager.get_quotes())
 
 running = True
-
 while running:
-
     events = pg.event.get()
     for event in events:
         if event.type == pg.QUIT:
@@ -82,15 +83,15 @@ while running:
     mouse = pg.mouse.get_pressed()
 
     # Game starts in the main menu.
-    if global_state == Gamestate.MAIN_MENU:
+    if game_manager.state == State.MAIN_MENU:
         mouse_pos = pg.mouse.get_pos()
         mouse = pg.mouse.get_pressed()
         click = mouse[0]
 
         # Apply background.
-        SCREEN.blit(background)
+        game_manager.draw_background(background)
         # Draw only those in the 'buttons' group.
-        buttons.draw(SCREEN)
+        game_manager.draw(buttons)
 
         # Button logic.
         # Not encapsulated, same as player movement logic.
@@ -115,25 +116,28 @@ while running:
                 button.clicked = False
                 if button.kind == 'play':
                     shiftclock.start_time()
-                    global_state = Gamestate.PLAYING
+                    game_manager.set_state(State.PLAYING)
                 elif button.kind == 'quit':
                     running = False
 
-    elif global_state == Gamestate.PLAYING:
+    elif game_manager.state == State.PLAYING:
+
         # After a certain amount of time, generate a ticket.
         ticketmanager.update(tickets, shiftclock)
         
         # Draw objects.
-        SCREEN.blit(background)
+        game_manager.draw_background(background)
 
-        kitchen.draw(screen)
-        players.draw(screen)
-        popups.draw(screen)
-        tickets.draw(screen)
-        foods.draw(screen)
-        statuses.draw(screen)
-        generics.draw(screen)
-        shiftclock_group.draw(screen)
+        game_manager.draw(
+            kitchen,
+            players,
+            popups,
+            tickets,
+            foods,
+            statuses,
+            generics,
+            shiftclock_group
+        )
 
         # Update all objects.
         all_sprites.update()
@@ -209,26 +213,28 @@ while running:
                         cooked = ingredient
                         quote = ticket.quotes[0]
                         quote.add(cook_group)
-                        global_state = Gamestate.TYPING
+                        game_manager.set_state(State.TYPING)
 
         pause = keys[pg.K_ESCAPE]        
 
-    elif global_state == Gamestate.TYPING:
+    elif game_manager.state == State.TYPING:
         # Continue spawning tickets even while typing
         ticketmanager.update(tickets, shiftclock)
 
+        game_manager.draw_background(background)
 
-        SCREEN.blit(background)
-        kitchen.draw(screen)
-        players.draw(screen)
-        tickets.draw(screen)
-        foods.draw(screen)
-        cook_group.draw(screen)
-        texts.draw(screen)
-        statuses.draw(screen)
-        cook_timer.draw(screen)
-        shiftclock_group.draw(screen)
-        generics.draw(screen)
+        game_manager.draw(
+            kitchen,
+            players,
+            tickets,
+            foods,
+            cook_group,
+            texts,
+            statuses,
+            cook_timer,
+            shiftclock,
+            generics
+        )
         # Put this before pg.display.flip()
 
         quote.handle_ipnut(events)
@@ -255,7 +261,7 @@ while running:
             for status in timer.wrongs:
                 status.kill()
 
-            global_state = Gamestate.PLAYING
+            game_manager.set_state(State.PLAYING)
 
 
 
@@ -270,9 +276,9 @@ while running:
             timer.kill()
             for status in timer.wrongs:
                 status.kill()
-            global_state = Gamestate.PLAYING
+            game_manager.set_state(State.PLAYING)
 
     pg.display.flip()
-    clock.tick(FPS)
+    game_manager.clock.tick(Config.FPS)
     
 pg.quit()

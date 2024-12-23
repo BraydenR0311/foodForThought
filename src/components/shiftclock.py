@@ -2,9 +2,9 @@ import time
 
 import pygame as pg
 
-from constants import *
 from paths import *
 from src.components.text import Text
+from utils.utils import get_screen_rect
 
 class ShiftClock(Text):
     """
@@ -49,4 +49,5 @@ class ShiftClock(Text):
         self.image = self.font.render(self.text, 1,
                                       self.color, self.bgcolor)
         self.rect = self.image.get_rect()
-        self.rect.topright = SCREEN_RECT.topright
+        # When text, make sure it's positioned correctly.
+        self.rect.topright = get_screen_rect().topright

@@ -3,7 +3,7 @@ import time
 import pygame as pg
 
 from paths import *
-from constants import *
+from utils.utils import get_screen_rect
 
 class Player(pg.sprite.Sprite):
 
@@ -50,12 +50,11 @@ class Player(pg.sprite.Sprite):
     def __init__(self):
         super().__init__(self.containers)
         self.index = 0
-        self.screen = pg.display.get_surface()
         self.speed = 2
         self.dx = 0
         self.dy = 0
         self.image = self.up_still
-        self.rect = self.image.get_rect(center=self.screen.get_rect().center)
+        self.rect = self.image.get_rect(center=get_screen_rect().center)
         self.time = time.time()
 
     def update(self):
