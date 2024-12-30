@@ -3,7 +3,7 @@ import string
 import pygame as pg
 
 from paths import *
-from utils.utils import get_screen_rect
+from src.utils.utils import get_screen_rect
 
 class Text(pg.sprite.Sprite):
 

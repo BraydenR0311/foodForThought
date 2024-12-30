@@ -4,7 +4,7 @@ import pygame as pg
 
 from paths import *
 from src.components.text import Text
-from utils.utils import get_screen_rect
+from src.utils.utils import get_screen_rect
 
 class ShiftClock(Text):
     """
@@ -23,6 +23,8 @@ class ShiftClock(Text):
         self.secs = 0
         self.tick = False
         self.starttime = 0
+        self.image = None
+        self.rect = None
 
     def update(self):
 

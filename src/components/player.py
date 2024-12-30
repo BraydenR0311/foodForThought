@@ -3,49 +3,21 @@ import time
 import pygame as pg
 
 from paths import *
-from utils.utils import get_screen_rect
+from src.utils.utils import get_screen_rect
 
 class Player(pg.sprite.Sprite):
+    IMAGE_PATHS = {
+        'up': IMAGE_DIR / 'chef' / 'chef1.png',
+        'walk1': IMAGE_DIR / 'chef' / 'chef2.png',
+        'walk2': IMAGE_DIR / 'chef' / 'chef3.png'
+    }
 
-    up_still = pg.image.load(IMAGE_DIR / 'chef' / 'chef1.png').convert_alpha()
-
-    down_still = pg.transform.rotate(up_still, 180)
-
-    left_still = pg.transform.rotate(up_still, 90)
-
-    right_still = pg.transform.rotate(up_still, 270)
-
-    walk_up = [
-        pg.image.load(IMAGE_DIR / 'chef' / 'chef2.png').convert_alpha(),
-        up_still,
-        pg.image.load(IMAGE_DIR / 'chef' / 'chef3.png').convert_alpha(),
-        up_still
-    ]
-
-    walk_down = [
-        pg.transform.rotate(walk_up[0], 180),
-        down_still,
-        pg.transform.rotate(walk_up[2], 180),
-        down_still
-    ]
-
-    walk_left = [
-        pg.transform.rotate(walk_up[0], 90),
-        left_still,
-        pg.transform.rotate(walk_up[2], 90),
-        left_still
-    ]
-
-    walk_right = [
-        pg.transform.rotate(walk_up[0], 270),
-        right_still,
-        pg.transform.rotate(walk_up[2], 270),
-        right_still
-    ]
-
-    ANIM_SPEED = 0.2
+    images = {}
+    animations = {}
 
     containers = None
+    
+    ANIM_SPEED = 0.2
 
     def __init__(self):
         super().__init__(self.containers)
@@ -53,7 +25,7 @@ class Player(pg.sprite.Sprite):
         self.speed = 2
         self.dx = 0
         self.dy = 0
-        self.image = self.up_still
+        self.image = self.images['up']
         self.rect = self.image.get_rect(center=get_screen_rect().center)
         self.time = time.time()
 
@@ -68,3 +40,48 @@ class Player(pg.sprite.Sprite):
             self.image = anim[self.index]
             self.time = time.time()
             self.index += 1
+
+    #TODO: create class method to init animation (rotated images).
+    @classmethod
+    def set_additional_images(cls):
+        """Image transformations and animations needed
+        for this class."""
+        new_images = {
+            'down': pg.transform.rotate(cls.images['up'], 180),
+            'left': pg.transform.rotate(cls.images['up'], 90),
+            'right': pg.transform.rotate(cls.images['up'], 270),
+        }
+
+        animations = {
+            'walk_up': [
+                cls.images['walk1'], 
+                cls.images['up'],
+                cls.images['walk2'],
+                cls.images['up']
+            ],
+            'walk_left': [
+                pg.transform.rotate(cls.images['walk1'], 90), 
+                new_images['left'],
+                pg.transform.rotate(cls.images['walk2'], 90),
+                new_images['left']
+            ],
+            'walk_right': [
+                pg.transform.rotate(cls.images['walk1'], 270), 
+                new_images['right'],
+                pg.transform.rotate(cls.images['walk2'], 270),
+                new_images['right']
+            ],
+            'walk_down': [
+                pg.transform.rotate(cls.images['walk1'], 180), 
+                new_images['down'],
+                pg.transform.rotate(cls.images['walk2'], 180),
+                new_images['down']
+            ],
+        }
+        # Add to respective dictionary.
+        cls.images.update(new_images)
+        cls.animations.update(animations)
+
+
+
+

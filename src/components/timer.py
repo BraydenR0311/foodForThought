@@ -4,7 +4,7 @@ import pygame as pg
 
 from paths import *
 from src.components.text import Text
-from utils.utils import get_screen_rect
+from src.utils.utils import get_screen_rect
 from src.components.status import Status
 
 class Timer(Text):

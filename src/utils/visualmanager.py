@@ -5,3 +5,5 @@ from utils.utils import quoteread
 from paths import *
 
 class VisualManager:
+    def __init__(self):
+        

@@ -6,8 +6,12 @@ import pygame as pg
 from paths import *
 from src.config import Config
 
-# get_sprite_image()
-# each image has class atr image_paths = {}
+def set_sprite_images(cls):
+    if not hasattr(cls, 'IMAGE_PATHS'):
+        raise AttributeError('Class must have IMAGE_PATHS attribute.')
+    images = {name: pg.image.load(path).convert_alpha()
+              for name, path in cls.IMAGE_PATHS.items()}
+    cls.images = images
 
 def get_screen_rect():
     return pg.display.get_surface().get_rect()

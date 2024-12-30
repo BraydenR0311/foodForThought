@@ -1,24 +1,21 @@
 import pygame as pg
 
 from paths import *
-from utils.utils import get_screen_rect
+from src.utils.utils import get_screen_rect
 
 class Button(pg.sprite.Sprite):
-
-    IMAGES = {'play': pg.image.load(IMAGE_DIR
-                                    / 'buttons'
-                                    / 'play.png').convert_alpha(),
-
-              'quit': pg.image.load(IMAGE_DIR                                         
-                                            / 'buttons'
-                                            / 'quit.png').convert_alpha()}
+    IMAGE_PATHS = {
+        'play': IMAGE_DIR / 'buttons' / 'play.png',
+        'quit': IMAGE_DIR / 'buttons' / 'quit.png'
+    }
 
     containers = None
+    images = {}
 
     def __init__(self, kind: str):
         super().__init__(self.containers)
         self.kind = kind
-        self.image = self.IMAGES[self.kind]
+        self.image = self.images[self.kind]
         self.rect = self.align_rect()
         self.clicked = False
         self.armed = False
@@ -39,7 +36,7 @@ class Button(pg.sprite.Sprite):
         self.image = pg.transform.hsl(self.image, lightness = -.2)
 
     def unarm(self):
-        self.image = self.IMAGES[self.kind]
+        self.image = self.images[self.kind]
 
     def click(self):
         self.image = pg.transform.hsl(self.image, lightness = -.3)

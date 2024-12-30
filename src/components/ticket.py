@@ -3,7 +3,7 @@ import random
 import pygame as pg
 
 from paths import *
-from config import quotegen
+from src.utils.utils import quotegen
 from src.components.food import Food
 from src.components.text import Quote
 
@@ -14,7 +14,7 @@ class Ticket(pg.sprite.Sprite):
     def __init__(self, dishname):
         super().__init__(self.containers)
         # Quote to type out. Author for ticket title.
-        self.author, self.quote = None
+        self.author, self.quotes = None, None
         # Dimensions of ticket.
         self.size = (100, 150)
 
@@ -46,12 +46,6 @@ class Ticket(pg.sprite.Sprite):
         # self.dish.status.kill()
 
         self.cooked = []
-        self.quotes = [Quote(quote,
-                             ASSET_DIR / 'fonts' / 'pixel.ttf',
-                             15,
-                             'black')
-                        for quote 
-                        in self.split_quote(self.quote)]
         
     def update(self):
         if len(self.cooked) >= 3:
@@ -64,10 +58,7 @@ class Ticket(pg.sprite.Sprite):
 
     def _get_ingredients(self, dish_ingr_map):
         return [Food(ingredient) for ingredient in dish_ingr_map[self.dishname]]
-
-         
             
-    @staticmethod
     def split_quote(quote):
         quote = quote.split()
         chunk_len = len(quote) // 3
@@ -80,8 +71,20 @@ class Ticket(pg.sprite.Sprite):
 
         return quotes
     
-    def set_quote(self, quotes):
-        self.author, self.quotes = quotegen(quotes)
+    def set_quotes(self, quotes):
+        author, quote = quotegen(quotes)
+        quote = quote.split()
+        chunk_len = len(quote) // 3
+
+        first = ' '.join(quote[:chunk_len])
+        second = ' '.join(quote[chunk_len:2 * chunk_len])
+        third = ' '.join(quote[2 * chunk_len:])
+
+        quotes = [first, second, third]
+        quotes = [Quote(quote, ASSET_DIR / 'fonts' / 'pixel.ttf',
+                        15, 'black') for quote in quotes]
+
+        self.author, self.quotes = author, quotes
     
 class TicketManager:
     def __init__(self, spawnrate: int, max_tickets: int, quotes):
@@ -115,8 +118,7 @@ class TicketManager:
             and len(self.group) <= self.max_tickets):
                 food = random.choice(self.choices)
                 ticket = Ticket(food)
-                ticket.set_quote(self.quotes)
-                ticket.set_quote()
+                ticket.set_quotes(self.quotes)
                 self.spawning = True
         elif (self.spawning and
               self.shiftclock.secs % self.spawnrate):

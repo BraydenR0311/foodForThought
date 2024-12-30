@@ -7,8 +7,8 @@ import pygame as pg
 import random
 from paths import *
 from src.config import Config
-from utils.utils import read_tilemap, quoteread
-from utils.gamemanager import GameManager, State
+from src.utils.utils import read_tilemap, quoteread, set_sprite_images
+from src.utils.gamemanager import GameManager, State
 
 #TODO: Replace Status and Popup to Generic
 from src.components.button import Button
@@ -19,7 +19,7 @@ from src.components.shiftclock import ShiftClock
 from src.components.status import Status, Popup
 from src.components.text import Text, Quote
 from src.components.ticket import Ticket, TicketManager
-from src.components.tiles import Floor, Appliance
+from src.components.tiles import Tile, Floor, Appliance
 from src.components.timer import Timer
 
 pg.init()
@@ -48,19 +48,37 @@ generics = pg.sprite.Group()
 shiftclock_group = pg.sprite.GroupSingle()
 
 # Assign sprite classes to certain groups.
-Player.containers = players, all_sprites
-Floor.containers = kitchen, all_sprites
 Appliance.containers = appliances, kitchen, all_sprites
 Button.containers = buttons, all_sprites
+Floor.containers = kitchen, all_sprites
+Food.containers = foods, all_sprites
+Generic.containers = generics, all_sprites
+Player.containers = players, all_sprites
 Popup.containers = popups, all_sprites
 Quote.containers = quotes, all_sprites
-Text.containers = texts, all_sprites
-Food.containers = foods, all_sprites
-Ticket.containers = tickets, all_sprites
-Status.containers = statuses, all_sprites
-Timer.containers = cook_timer, all_sprites
-Generic.containers = generics, all_sprites
 ShiftClock.containers = shiftclock_group, all_sprites
+Status.containers = statuses, all_sprites
+Text.containers = texts, all_sprites
+Ticket.containers = tickets, all_sprites
+Timer.containers = cook_timer, all_sprites
+
+# Set images for each class.
+for cls in (
+    Food,
+    Player,
+    Tile,
+    Status,
+    Popup,
+    Button
+):
+    set_sprite_images(cls)
+
+# Player needs animations initialized.
+Player.set_additional_images()
+
+set_sprite_images(Tile)
+set_sprite_images(Status)
+set_sprite_images
 
 # Initialize objects.
 kitchen_rect = read_tilemap(ASSET_DIR / 'map.txt', Floor, Appliance)
@@ -128,6 +146,9 @@ while running:
         # Draw objects.
         game_manager.draw_background(background)
 
+        # Update all objects.
+        all_sprites.update()
+
         game_manager.draw(
             kitchen,
             players,
@@ -139,8 +160,6 @@ while running:
             shiftclock_group
         )
 
-        # Update all objects.
-        all_sprites.update()
 
         # Direction controls and collision with appliances.
         keys = pg.key.get_pressed()
@@ -153,11 +172,11 @@ while running:
 
         if up:
             player.dy = -player.speed
-            player.animate(player.walk_up)
+            player.animate(player.animations['walk_up'])
             player.rect.move_ip(0, player.dy)
         if down:
             player.dy = player.speed
-            player.animate(player.walk_down)
+            player.animate(player.animations['walk_down'])
             player.rect.move_ip(0, player.dy)
         hitlist = pg.sprite.spritecollide(player, appliances, False)
         for sprite in hitlist:
@@ -167,11 +186,11 @@ while running:
                 player.rect.top = sprite.rect.bottom
         if left:
             player.dx = -player.speed
-            player.animate(player.walk_left)
+            player.animate(player.animations['walk_left'])
             player.rect.move_ip(player.dx, 0)
         if right:
             player.dx = player.speed
-            player.animate(player.walk_right)
+            player.animate(player.animations['walk_right'])
             player.rect.move_ip(player.dx, 0)
         hitlist = pg.sprite.spritecollide(player, appliances, False)
         for sprite in hitlist:
@@ -232,7 +251,7 @@ while running:
             texts,
             statuses,
             cook_timer,
-            shiftclock,
+            shiftclock_group,
             generics
         )
         # Put this before pg.display.flip()
