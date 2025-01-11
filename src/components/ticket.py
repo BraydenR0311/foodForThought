@@ -9,21 +9,23 @@ from src.components.text import Quote
 
 class Ticket(pg.sprite.Sprite):
 
+    IMAGE_PATHS = {'ticket': IMAGE_DIR / 'ticket.png'}
+
     containers = None
+    images = {}
 
     def __init__(self, dishname):
         super().__init__(self.containers)
         # Quote to type out. Author for ticket title.
         # Initialized by ticket manager.
         self.author, self.quotes = None, None
-        # Dimensions of ticket.
-        self.size = (100, 150)
 
         # Offsets for positioning
+        self.first_offset = 20
         self.offset = 10 # Distance from edge of screen and other tickets.
         self.suboffset = 10 # Offset for attributes (ingredient, appliance hint, etc.)
         
-        self.image = pg.Surface(self.size)
+        self.image = self.images['ticket']
         self.rect = self.image.get_rect()
 
         self.dishname = dishname
@@ -33,8 +35,6 @@ class Ticket(pg.sprite.Sprite):
         self.cooked = []
         
     def update(self):
-        self.image.fill('white')
-
         # If all ingredients have been cooked.
         if len(self.cooked) >= 3:
             self.dish.kill()
@@ -127,7 +127,7 @@ class TicketManager:
                     ingredient.rect.topleft = ticket.rect.topleft
                     ingredient.rect.move_ip(
                         ticket.suboffset,
-                        ticket.suboffset
+                        ticket.suboffset + ticket.first_offset
                     )
                 else:
                     # Position according to last ingredient

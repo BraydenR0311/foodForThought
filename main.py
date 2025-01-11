@@ -76,7 +76,8 @@ for cls in (
     Tile,
     Status,
     Popup,
-    Button
+    Button,
+    Ticket
 ):
     set_sprite_images(cls)
 
@@ -84,7 +85,7 @@ for cls in (
 Player.set_additional_images()
 
 # Initialize objects.
-ticketmanager = TicketManager(15, 8, game_manager.get_quotes())
+ticketmanager = TicketManager(15, 7, game_manager.get_quotes())
 play = Button('play')
 quit_game = Button('quit')
 
