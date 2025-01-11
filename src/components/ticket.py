@@ -21,7 +21,7 @@ class Ticket(pg.sprite.Sprite):
 
         # Offsets for positioning
         self.offset = 10 # Distance from edge of screen and other tickets.
-        self.suboffset = 5 # Offset for attributes (ingredient, appliance hint, etc.)
+        self.suboffset = 10 # Offset for attributes (ingredient, appliance hint, etc.)
         
         self.image = pg.Surface(self.size)
         self.rect = self.image.get_rect()
@@ -29,21 +29,6 @@ class Ticket(pg.sprite.Sprite):
         self.dishname = dishname
         self.dish = Food(self.dishname)
         self.ingredients = self._get_ingredients(Food.DISH_DICT)
-
-        # self.ingredients = [Food(ingredient) for ingredient 
-        #                     in Food.FOOD_DICT[dish]]
-        # self.ingredient_offset = 30
-        # for i, ingredient in enumerate(self.ingredients):
-        #     ingredient.rect.topleft = self.rect.topleft
-        #     ingredient.rect.move_ip(0, i*self.ingredient_offset)
-        #     # Position the appliance hint.
-        #     ingredient.appliance_hint.rect.center = ingredient.rect.center
-        #     ingredient.appliance_hint.rect.move_ip(*ingredient.appliance_hint_offset)
-        #     # Position the status.
-        #     ingredient.status.rect.center = ingredient.rect.center
-        #     ingredient.status.rect.move_ip(*ingredient.status_offset)
-        #     ingredient.status.kill()
-        # self.dish.status.kill()
 
         self.cooked = []
         
@@ -91,25 +76,24 @@ class Ticket(pg.sprite.Sprite):
     
 class TicketManager:
     def __init__(self, spawnrate: int, max_tickets: int, quotes):
-        """
-        Parameters:
+        """Parameters:
         ---
-        - spawnrate: seconds before next spawn.
-        - group: ticket container.
-        - max_tickets: max num of tickets on screen.
+            - spawnrate: seconds before next spawn.
+            - group: ticket container.
+            - max_tickets: max num of tickets on screen.
         """
         self.spawnrate = spawnrate
         self.max_tickets = max_tickets
         self.quotes = quotes
-        self.choices = list(Food.DISH_DICT.keys())
+        self.choices = list(Food.DISH_DICT)
         self.spawning = False
 
         # Objects to be updated through the main loop.
         self.group = None
         self.shiftclock = None
 
-    def update(self, group: pg.sprite.Group, shiftclock):
-        self.group = group
+    def update(self, ticket_group: pg.sprite.Group, shiftclock):
+        self.group = ticket_group
         self.shiftclock = shiftclock
         
         self.spawn_tickets()

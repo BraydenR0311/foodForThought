@@ -14,6 +14,9 @@ class Status(pg.sprite.Sprite):
         super().__init__(self.containers)
         self.image = self.images['check'] if isCheck else self.images['x']
         self.rect = self.image.get_rect()
+    
+    def make_wrong(self):
+        self.image = self.images['x']
 
 class Popup(pg.sprite.Sprite):
 

@@ -43,14 +43,15 @@ class Food(pg.sprite.Sprite):
         self.quote = None
         
         self.status = Status(True)
-        # It shouldn't show up at first.
-        self.status.kill()
+        self.status.kill() # It shouldn't show up at first.
 
         self.appliance = self.APPLIANCE_DICT[self.kind]
         if self.appliance:
             # TODO: Access tileimages through class method
             self.appliance_hint = Generic(Tile.images[self.appliance])
-            self.appliance_hint.image = pg.transform.scale_by(self.appliance_hint.image, 0.25)
+            self.appliance_hint.image = pg.transform.scale_by(
+                self.appliance_hint.image, 0.25
+            )
             self.appliance_hint.rect = self.appliance_hint.image.get_rect()        
     
         self.image = self.images[self.kind]

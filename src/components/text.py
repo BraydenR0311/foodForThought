@@ -31,13 +31,20 @@ class Quote(Text):
         self.user.rect = self.rect
         self.wrongs = 0
         self.wronged = False
+        self.is_correct = False
 
     def update(self):
         self.image = self.font.render(self.text, 1, self.color, self.bgcolor)
         
         if self.user.text == self.text:
+            self.user.kill() # Kill user input.
+            self.kill() # Kill original text.
+            self.is_correct = True
+        
+        elif self.wrongs >= 3:
             self.user.kill()
             self.kill()
+
         if (not self.text.startswith(self.user.text) and
             not self.wronged):
             self.wronged = not self.wronged

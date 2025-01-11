@@ -45,7 +45,7 @@ buttons = pg.sprite.Group()
 kitchen = pg.sprite.Group()
 popups = pg.sprite.Group()
 quotes = pg.sprite.Group()
-cook_group = pg.sprite.GroupSingle()
+being_cooked_group = pg.sprite.GroupSingle()
 texts = pg.sprite.Group()
 foods = pg.sprite.Group()
 tickets = pg.sprite.Group()
@@ -84,20 +84,16 @@ for cls in (
 Player.set_additional_images()
 
 # Initialize objects.
-kitchen_rect = read_tilemap(ASSET_DIR / 'map.txt', Floor, Appliance)
-player = Player()
+ticketmanager = TicketManager(15, 8, game_manager.get_quotes())
 play = Button('play')
 quit_game = Button('quit')
-shiftclock = ShiftClock(
-    '9:00', ASSET_DIR / 'fonts' / 'pixel.ttf', 20, 'black'
-)
-ticketmanager = TicketManager(15, 8, game_manager.get_quotes())
+
 
 
 running = True
 while running:
     # Debugging.
-    print(game_manager.clock)
+    # print(game_manager.clock)
 
     events = pg.event.get()
     for event in events:
@@ -109,6 +105,15 @@ while running:
 
     # Game starts in the main menu.
     if game_manager.state == State.MAIN_MENU:
+        # Initialize objects.
+        kitchen_rect = read_tilemap(ASSET_DIR / 'map.txt', Floor, Appliance)
+        if not players:
+            player = Player()
+        if not shiftclock_group:
+            shiftclock = ShiftClock(
+                '9:00', ASSET_DIR / 'fonts' / 'pixel.ttf', 20, 'black'
+            )
+
         mouse_pos = pg.mouse.get_pos()
         mouse = pg.mouse.get_pressed()
         click = mouse[0]
@@ -227,17 +232,19 @@ while running:
 
         if interaction:
             # First elligible ingredient wanted.
-            for ticket in reversed(tickets.sprites()): # Reversing gives oldest first.
+            # Reversing gives oldest first.
+            for ticket in reversed(tickets.sprites()): 
                 for ingredient in reversed(ticket.ingredients):
                     ingr_appliance = ingredient.APPLIANCE_DICT[ingredient.kind]
                     # Check if there is an ingredient that should be cooked on the
                     # selected appliance.
-                    if ingr_appliance == closest.kind:
-                        cooked_ticket = ticket
-                        cooked = ingredient
+                    if (ingr_appliance == closest.kind and
+                        ingredient not in ticket.cooked):
+                        ticket_to_cook = ticket
+                        ingredient_to_cook = ingredient
                         # Choose tickets in order
                         quote = ticket.quotes[0]
-                        quote.add(cook_group)
+                        quote.add(being_cooked_group)
                         game_manager.set_state(State.TYPING)
 
         pause = keys[pg.K_ESCAPE]        
@@ -245,7 +252,7 @@ while running:
     elif game_manager.state == State.TYPING:
         # Continue spawning tickets even while typing
         ticketmanager.update(tickets, shiftclock)
-
+        cook_timer.update()
         game_manager.draw_background(background)
 
         quotes.update()
@@ -255,7 +262,7 @@ while running:
             players,
             tickets,
             foods,
-            cook_group,
+            being_cooked_group,
             texts,
             statuses,
             cook_timer,
@@ -265,43 +272,41 @@ while running:
 
         # Logic for typing.
         quote.handle_ipnut(events)
+
         if not cook_timer:
             # TODO: Adjust based on difficulty setting.
             # Set the timer duration according to quote length.
-            timer = Timer(len(quote.text.split()) + 3,
-                  ASSET_DIR / 'fonts' / 'pixel.ttf',
-                  80, 'black')
+            timer = Timer(
+                len(quote.text.split()) + 3,
+                ASSET_DIR / 'fonts' / 'pixel.ttf',
+                80, 'black'
+            )
 
         # Add wrongs if mess up.
         if (quote.wrongs > len(timer.wrongs) and
             quote.wrongs < 3):
             timer.add_wrong()
 
-        current_wrongs = quote.wrongs
-
+        # If time runs out or user messes up 3 times.
         if int(timer.text) == 0 or quote.wrongs >= 3:
             quote.user.kill()
-            cooked.status.image = pg.image.load(IMAGE_DIR / 'x.png').convert_alpha()
-            cooked_ticket.ingredients.remove(cooked)
-            cooked_ticket.cooked.append(cooked)
-            cooked_ticket.quotes.remove(quote)
-            cooked.status.add(Status.containers)
+            quote.kill()
+            ingredient_to_cook.status.make_wrong()
+            ingredient_to_cook.status.add(Status.containers)
+            ticket_to_cook.cooked.append(ingredient_to_cook)
+            ticket_to_cook.quotes.remove(quote)
+            # Kill sprites for typing sequence.
             timer.kill()
             for status in timer.wrongs:
                 status.kill()
 
             game_manager.set_state(State.PLAYING)
-
-
-
-
-
-        if not cook_group:
-            quote.user.kill()
-            cooked_ticket.ingredients.remove(cooked)
-            cooked_ticket.cooked.append(cooked)
-            cooked_ticket.quotes.remove(quote)
-            cooked.status.add(Status.containers)
+        
+        if quote.is_correct:
+            ingredient_to_cook.status.add(Status.containers)
+            ticket_to_cook.cooked.append(ingredient_to_cook)
+            ticket_to_cook.quotes.remove(quote)
+            # Kill sprites for typing sequence.
             timer.kill()
             for status in timer.wrongs:
                 status.kill()
