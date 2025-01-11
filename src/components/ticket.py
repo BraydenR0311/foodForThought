@@ -5,7 +5,7 @@ import pygame as pg
 from paths import *
 from src.utils.utils import quotegen
 from src.components.food import Food
-from src.components.text import Quote
+from src.components.text import Quote, Text
 
 class Ticket(pg.sprite.Sprite):
 
@@ -29,7 +29,7 @@ class Ticket(pg.sprite.Sprite):
         self.rect = self.image.get_rect()
 
         self.dishname = dishname
-        self.dish = Food(self.dishname)
+        self.dishname_text = None
         self.ingredients = self._get_ingredients(Food.DISH_DICT)
 
         self.cooked = []
@@ -37,7 +37,7 @@ class Ticket(pg.sprite.Sprite):
     def update(self):
         # If all ingredients have been cooked.
         if len(self.cooked) >= 3:
-            self.dish.kill()
+            self.dishname_text.kill()
             for ingredient in self.cooked:
                 ingredient.status.kill()
                 ingredient.appliance_hint.kill()
@@ -72,7 +72,14 @@ class Ticket(pg.sprite.Sprite):
         quotes = [Quote(quote, ASSET_DIR / 'fonts' / 'pixel.ttf',
                         15, 'black') for quote in quotes]
 
-        self.author, self.quotes = author, quotes
+        self.author, self.quotes = author.capitalize(), quotes
+        # Now that we have the author, create the dishname Text object.
+        self.dishname_text = Text(
+                ' '.join([self.author, self.dishname]),
+                ASSET_DIR / 'fonts' / 'pixel.ttf',
+                7,
+                'black'
+        )
     
 class TicketManager:
     def __init__(self, spawnrate: int, max_tickets: int, quotes):
@@ -103,7 +110,7 @@ class TicketManager:
         # If not currently spawning and secs / spawn rate == 0.
         if (not self.spawning and
             not self.shiftclock.secs % self.spawnrate and
-            len(self.group) <= self.max_tickets):
+            len(self.group) < self.max_tickets):
                 food = random.choice(self.choices)
                 ticket = Ticket(food)
                 ticket.set_quotes(self.quotes)
@@ -149,9 +156,8 @@ class TicketManager:
                     ticket.suboffset,
                     0
                 )
-            # Position the dish.
-            ticket.dish.rect.bottomleft = ticket.rect.bottomleft
-            ticket.dish.rect.move_ip(ticket.suboffset, -ticket.suboffset)
-            # Position status.
-            ticket.dish.status.rect.midleft = ticket.dish.rect.midright
-            ticket.dish.status.rect.move_ip(ticket.suboffset, 0)
+            # Position the dish name.
+            #TODO: Turn this into a ticket attribute
+            
+            ticket.dishname_text.rect.bottomleft = ticket.rect.bottomleft
+            ticket.dishname_text.rect.move_ip(ticket.suboffset, -ticket.suboffset)

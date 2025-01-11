@@ -88,8 +88,7 @@ Player.set_additional_images()
 ticketmanager = TicketManager(15, 7, game_manager.get_quotes())
 play = Button('play')
 quit_game = Button('quit')
-
-
+pressing_e = False
 
 running = True
 while running:
@@ -170,6 +169,7 @@ while running:
             foods,
             statuses,
             generics,
+            texts,
             shiftclock_group
         )
 
@@ -231,7 +231,7 @@ while running:
         else:
             closest.popup.kill()
 
-        if interaction:
+        if interaction and not pressing_e:
             # First elligible ingredient wanted.
             # Reversing gives oldest first.
             for ticket in reversed(tickets.sprites()): 
@@ -247,6 +247,9 @@ while running:
                         quote = ticket.quotes[0]
                         quote.add(being_cooked_group)
                         game_manager.set_state(State.TYPING)
+
+        if not keys[pg.K_e]:
+            pressing_e = False
 
         pause = keys[pg.K_ESCAPE]        
 
@@ -264,15 +267,20 @@ while running:
             tickets,
             foods,
             being_cooked_group,
-            texts,
             statuses,
             cook_timer,
             shiftclock_group,
+            texts,
             generics
         )
 
         # Logic for typing.
         quote.handle_ipnut(events)
+
+        if keys[pg.K_e]:
+            pressing_e = True
+        else:
+            pressing_e = False
 
         if not cook_timer:
             # TODO: Adjust based on difficulty setting.
