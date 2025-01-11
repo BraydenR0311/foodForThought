@@ -3,7 +3,7 @@ from enum import Enum, auto
 import pygame as pg
 
 from src.config import Config
-from src.utils.utils import quoteread
+from src.utils.utils import get_quotes
 from paths import *
 
 class State(Enum):
@@ -16,7 +16,7 @@ class GameManager:
     def __init__(self):
         self.screen = None
         self.clock = pg.time.Clock()
-        self.quotes = quoteread(ASSET_DIR / 'quotes.txt')
+        self.quotes = get_quotes(ASSET_DIR / 'quotes.json')
         self.state = State.MAIN_MENU
 
     def load_screen(self):

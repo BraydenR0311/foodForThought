@@ -14,7 +14,7 @@ import pygame as pg
 import random
 from paths import *
 from src.config import Config
-from src.utils.utils import read_tilemap, quoteread, set_sprite_images
+from src.utils.utils import read_tilemap, get_quotes, set_sprite_images
 from src.utils.gamemanager import GameManager, State
 
 #TODO: Replace Status and Popup to Generic
@@ -256,6 +256,7 @@ while running:
     elif game_manager.state == State.TYPING:
         # Continue spawning tickets even while typing
         ticketmanager.update(tickets, shiftclock)
+        shiftclock.update()
         cook_timer.update()
         game_manager.draw_background(background)
 

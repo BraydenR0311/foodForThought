@@ -3,9 +3,9 @@ import random
 import pygame as pg
 
 from paths import *
-from src.utils.utils import quotegen
 from src.components.food import Food
 from src.components.text import Quote, Text
+from src.components.generic import Generic
 
 class Ticket(pg.sprite.Sprite):
 
@@ -18,7 +18,11 @@ class Ticket(pg.sprite.Sprite):
         super().__init__(self.containers)
         # Quote to type out. Author for ticket title.
         # Initialized by ticket manager.
-        self.author, self.quotes = None, None
+        self.quotes = None # Quote objects from quote split in 3.
+        self.author_id = None # Unique id for author.
+        self.author = None
+        self.lastname = None
+        self.author_face = None # Image of author's face.
 
         # Offsets for positioning
         self.first_offset = 20
@@ -29,9 +33,11 @@ class Ticket(pg.sprite.Sprite):
         self.rect = self.image.get_rect()
 
         self.dishname = dishname
+        # Text object that is used on the ticket.
         self.dishname_text = None
         self.ingredients = self._get_ingredients(Food.DISH_DICT)
 
+        # Keep track out which ingredients are finished.
         self.cooked = []
         
     def update(self):
@@ -44,10 +50,45 @@ class Ticket(pg.sprite.Sprite):
                 ingredient.kill()
             self.kill()
 
+    
+    def set_quote_data(self, quotes) -> None:
+        """Used by TickeManager to get data."""
+        # Generate random quote from quote data.
+        quote_data = random.choice(quotes)
+        # Extract data.
+        quote = quote_data['quote']
+        author_id = quote_data['id']
+        author = quote_data['author']
+        lastname = author.split(' ')[-1]
+        
+        quote = quote.replace('\n', ' ')
+        quotes = self._split_quote(quote)
+        quotes = [
+            Quote(quote, ASSET_DIR / 'fonts' / 'pixel.ttf',15, 'black')
+            for quote in quotes
+        ]
+        
+        self.quotes = quotes
+        self.author_id = author_id
+        self.author = author
+        self.lastname = lastname
+        self.author_face = Generic(
+            pg.image.load(
+                IMAGE_DIR / 'faces' /(author_id + '.jpg')
+            ).convert_alpha()
+        )
+        self.author_face.kill()
+        # Now that we have the author, create the dishname Text object.
+        self.dishname_text = Text(
+                ' '.join([self.lastname, self.dishname]),
+                ASSET_DIR / 'fonts' / 'pixel.ttf', 7, 'black'
+        )
+
     def _get_ingredients(self, dish_ingr_map):
         return [Food(ingredient) for ingredient in dish_ingr_map[self.dishname]]
-            
-    def split_quote(quote):
+
+    @staticmethod
+    def _split_quote(quote):
         quote = quote.split()
         chunk_len = len(quote) // 3
 
@@ -59,28 +100,7 @@ class Ticket(pg.sprite.Sprite):
 
         return quotes
     
-    def set_quotes(self, quotes):
-        author, quote = quotegen(quotes)
-        quote = quote.split()
-        chunk_len = len(quote) // 3
 
-        first = ' '.join(quote[:chunk_len])
-        second = ' '.join(quote[chunk_len:2 * chunk_len])
-        third = ' '.join(quote[2 * chunk_len:])
-
-        quotes = [first, second, third]
-        quotes = [Quote(quote, ASSET_DIR / 'fonts' / 'pixel.ttf',
-                        15, 'black') for quote in quotes]
-
-        self.author, self.quotes = author.capitalize(), quotes
-        # Now that we have the author, create the dishname Text object.
-        self.dishname_text = Text(
-                ' '.join([self.author, self.dishname]),
-                ASSET_DIR / 'fonts' / 'pixel.ttf',
-                7,
-                'black'
-        )
-    
 class TicketManager:
     def __init__(self, spawnrate: int, max_tickets: int, quotes):
         """Parameters:
@@ -113,7 +133,7 @@ class TicketManager:
             len(self.group) < self.max_tickets):
                 food = random.choice(self.choices)
                 ticket = Ticket(food)
-                ticket.set_quotes(self.quotes)
+                ticket.set_quote_data(self.quotes)
                 self.spawning = True
         elif (self.spawning and
               self.shiftclock.secs % self.spawnrate):

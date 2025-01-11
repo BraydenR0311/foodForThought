@@ -1,4 +1,5 @@
 import random
+import json
 from pathlib import Path
 
 import pygame as pg
@@ -45,44 +46,24 @@ def read_tilemap(path, floor_cls, appliance_cls) -> pg.Rect:
             else:
                 appliance_cls(tile, rect)
 
-    kitchen_rect = pg.Rect(topleftx,
-                            toplefty,
-                            gridwidth * Config.TILESIZE,
-                            gridwidth * Config.TILESIZE)
+    kitchen_rect = pg.Rect(
+        topleftx,
+        toplefty,
+        gridwidth * Config.TILESIZE,
+        gridwidth * Config.TILESIZE
+    )
 
     return kitchen_rect
 
 
-
-def quotegen(quotes: dict) -> tuple[str, str]:
+def get_quotes(file: str | Path) -> dict[str, list]:
+    """Parse json file and return dictionary in the form of
+    {author: quote}
     """
-    Returns a tuple of an author and one of their quotes.
-    """
-    
-    author = random.choice(list(quotes.keys()))
-    quote = random.choice(quotes[author])
-
-    return author, quote
-
-def quoteread(file: str | Path) -> dict[str, list]:
-    """
-    Read quotes.txt and return dictionary in the form of {author: quote}
-    """
-
-    quotes = {}
-    author = None
-
-    with open(file, 'r', encoding='utf-8') as infile:
-        for line in infile:
-            line = line.strip()
-            # Empty lines separate author/quote blocks
-            if not line:
-                author = None
-            # Found an author
-            elif not author:
-                author = line
-                quotes[author] = []
-            else:
-                quotes[author].append(line)
-
+    with open(file) as infile:
+        quotes = json.load(infile)
+    quotes = [
+        quote for quote in quotes
+        if Config.QUOTE_MIN<= len(quote['quote'].split()) <= Config.QUOTE_MAX
+    ]
     return quotes
