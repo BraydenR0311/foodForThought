@@ -3,6 +3,13 @@
 # TODO: Update ticket locations as tickets are completed
 # TODO: money from tickets according to dish quality.
 
+# This program as a whole is my honest attempt at OOP.
+# Some caveats:
+#   - the only instance properties that 'should be' allowed directly accessed
+#   by other classes are images and rects. I couldn't be bothered to make
+#   methods to allow this, and it seems in the spirit of pygame to allow
+#   direct access to these.
+
 import pygame as pg
 import random
 from paths import *
@@ -76,10 +83,6 @@ for cls in (
 # Player needs animations initialized.
 Player.set_additional_images()
 
-set_sprite_images(Tile)
-set_sprite_images(Status)
-set_sprite_images
-
 # Initialize objects.
 kitchen_rect = read_tilemap(ASSET_DIR / 'map.txt', Floor, Appliance)
 player = Player()
@@ -90,8 +93,12 @@ shiftclock = ShiftClock(
 )
 ticketmanager = TicketManager(15, 8, game_manager.get_quotes())
 
+
 running = True
 while running:
+    # Debugging.
+    print(game_manager.clock)
+
     events = pg.event.get()
     for event in events:
         if event.type == pg.QUIT:
@@ -160,7 +167,7 @@ while running:
             shiftclock_group
         )
 
-
+        # TODO: create player method 'move(direction)'
         # Direction controls and collision with appliances.
         keys = pg.key.get_pressed()
 
@@ -202,8 +209,6 @@ while running:
         # Keep chef in the kitchen.
         player.rect.clamp_ip(kitchen_rect)
 
-       
-
         # Manage interaction between player and appliances.
         interaction = keys[pg.K_e]
 
@@ -223,13 +228,14 @@ while running:
         if interaction:
             # First elligible ingredient wanted.
             for ticket in reversed(tickets.sprites()): # Reversing gives oldest first.
-                print(ticket.dish.kind)
                 for ingredient in reversed(ticket.ingredients):
                     ingr_appliance = ingredient.APPLIANCE_DICT[ingredient.kind]
-                    # Find ingredient for the interacted appliance.
+                    # Check if there is an ingredient that should be cooked on the
+                    # selected appliance.
                     if ingr_appliance == closest.kind:
                         cooked_ticket = ticket
                         cooked = ingredient
+                        # Choose tickets in order
                         quote = ticket.quotes[0]
                         quote.add(cook_group)
                         game_manager.set_state(State.TYPING)
@@ -241,6 +247,8 @@ while running:
         ticketmanager.update(tickets, shiftclock)
 
         game_manager.draw_background(background)
+
+        quotes.update()
 
         game_manager.draw(
             kitchen,
@@ -254,15 +262,17 @@ while running:
             shiftclock_group,
             generics
         )
-        # Put this before pg.display.flip()
 
+        # Logic for typing.
         quote.handle_ipnut(events)
         if not cook_timer:
+            # TODO: Adjust based on difficulty setting.
+            # Set the timer duration according to quote length.
             timer = Timer(len(quote.text.split()) + 3,
                   ASSET_DIR / 'fonts' / 'pixel.ttf',
                   80, 'black')
 
-        # Add Wrongs if mess up.
+        # Add wrongs if mess up.
         if (quote.wrongs > len(timer.wrongs) and
             quote.wrongs < 3):
             timer.add_wrong()

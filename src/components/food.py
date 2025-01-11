@@ -42,7 +42,9 @@ class Food(pg.sprite.Sprite):
         self.kind = kind
         self.quote = None
         
-        self.status = Status(True) 
+        self.status = Status(True)
+        # It shouldn't show up at first.
+        self.status.kill()
 
         self.appliance = self.APPLIANCE_DICT[self.kind]
         if self.appliance:

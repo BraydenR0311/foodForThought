@@ -14,6 +14,7 @@ class Ticket(pg.sprite.Sprite):
     def __init__(self, dishname):
         super().__init__(self.containers)
         # Quote to type out. Author for ticket title.
+        # Initialized by ticket manager.
         self.author, self.quotes = None, None
         # Dimensions of ticket.
         self.size = (100, 150)
@@ -23,7 +24,6 @@ class Ticket(pg.sprite.Sprite):
         self.suboffset = 5 # Offset for attributes (ingredient, appliance hint, etc.)
         
         self.image = pg.Surface(self.size)
-        self.image.fill('white')
         self.rect = self.image.get_rect()
 
         self.dishname = dishname
@@ -48,6 +48,9 @@ class Ticket(pg.sprite.Sprite):
         self.cooked = []
         
     def update(self):
+        self.image.fill('white')
+
+        # If all ingredients have been cooked.
         if len(self.cooked) >= 3:
             self.dish.kill()
             for ingredient in self.cooked:
@@ -113,9 +116,10 @@ class TicketManager:
         self.manage_locations()
 
     def spawn_tickets(self):
+        # If not currently spawning and secs / spawn rate == 0.
         if (not self.spawning and
-            not self.shiftclock.secs % self.spawnrate
-            and len(self.group) <= self.max_tickets):
+            not self.shiftclock.secs % self.spawnrate and
+            len(self.group) <= self.max_tickets):
                 food = random.choice(self.choices)
                 ticket = Ticket(food)
                 ticket.set_quotes(self.quotes)
@@ -160,4 +164,10 @@ class TicketManager:
                 ingredient.status.rect.move_ip(
                     ticket.suboffset,
                     0
-                    )
+                )
+            # Position the dish.
+            ticket.dish.rect.bottomleft = ticket.rect.bottomleft
+            ticket.dish.rect.move_ip(ticket.suboffset, -ticket.suboffset)
+            # Position status.
+            ticket.dish.status.rect.midleft = ticket.dish.rect.midright
+            ticket.dish.status.rect.move_ip(ticket.suboffset, 0)
