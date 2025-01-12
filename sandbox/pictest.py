@@ -87,7 +87,7 @@ class Player(pg.sprite.Sprite):
             self.rect.move_ip(self.speed, 0)
         
 
-    def update(self):
+    def update(self, *args, **kwargs):
         self._move()
 
 group = pg.sprite.Group()

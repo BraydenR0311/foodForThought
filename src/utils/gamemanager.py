@@ -11,6 +11,7 @@ class State(Enum):
     PLAYING = auto()
     PAUSED = auto()
     TYPING = auto()
+    INITIALIZING_ROUND = auto()
 
 class GameManager:
     def __init__(self):
@@ -27,9 +28,7 @@ class GameManager:
         self.screen.blit(background_image)
 
     def draw(self, *groups):
-        """
-        Draws groups to the screen in order listed.
-        """
+        """Draws groups to the screen in order listed."""
         for group in groups:
             group.draw(self.screen)
 

@@ -3,7 +3,6 @@ import pygame as pg
 from paths import *
 from src.components.status import Status
 from src.components.generic import Generic
-from src.components.tiles import Tile
 
 class Food(pg.sprite.Sprite):
 
@@ -26,20 +25,27 @@ class Food(pg.sprite.Sprite):
                   'tomato': 'c',
                   'shell': 'o'}
     
-    DISH_DICT = {'burger': ['bun',
-                            'patty',
-                            'cheese'],
-                 'taco': ['shell',
-                          'beef',
-                          'tomato']}
+    MENU = {
+        'burger': [
+            'bun',
+            'patty',
+            'cheese'
+        ],
+        'taco': [
+            'shell',
+            'beef',
+            'tomato'
+        ]
+    }
 
     containers = None
     images = {}
  
-    def __init__(self, kind):
+    def __init__(self, kind, tile_images):
         super().__init__(self.containers)
         # ie. 'burger', 'patty'
         self.kind = kind
+        self.tile_images = tile_images
         self.quote = None
         
         self.status = Status(True)
@@ -48,7 +54,7 @@ class Food(pg.sprite.Sprite):
         self.appliance = self.APPLIANCE_DICT[self.kind]
         if self.appliance:
             # TODO: Access tileimages through class method
-            self.appliance_hint = Generic(Tile.images[self.appliance])
+            self.appliance_hint = Generic(tile_images[self.appliance])
             self.appliance_hint.image = pg.transform.scale_by(
                 self.appliance_hint.image, 0.25
             )
@@ -56,3 +62,15 @@ class Food(pg.sprite.Sprite):
     
         self.image = self.images[self.kind]
         self.rect = self.image.get_rect()
+
+    @classmethod
+    def get_dish_names(cls):
+        return list(cls.MENU.keys())
+    
+    @classmethod
+    def get_ingredients(cls, dish_name):
+        return list(cls.MENU[dish_name])
+    
+    @classmethod
+    def get_menu(cls):
+        return cls.MENU

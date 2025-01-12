@@ -18,8 +18,10 @@ class ShiftClock(Text):
         self.pause_start = 0
         self.is_running = False
 
-        self.image = None
-        self.rect = None
+        self.image = self.font.render(
+            self.text, 1, self.color, self.bgcolor
+        )
+        self.rect = self.image.get_rect()
 
     def update(self, *args, **kwargs):
         self.update_text()
@@ -52,8 +54,9 @@ class ShiftClock(Text):
         if (not secs % self.SECS_IN_HOUR == 0) and self.tick:
             self.tick = not self.tick
         self.text = str(self.hour) + ':00'
-        self.image = self.font.render(self.text, 1,
-                                      self.color, self.bgcolor)
+        self.image = self.font.render(
+            self.text, 1, self.color, self.bgcolor
+        )
         self.rect = self.image.get_rect()
         # When text, make sure it's positioned correctly.
         self.rect.topright = get_screen_rect().topright

@@ -8,9 +8,7 @@ from src.utils.utils import get_screen_rect
 from src.components.status import Status
 
 class Timer(Text):
-    """
-    Times and keeps track of wrongs.
-    """
+    """Times and keeps track of wrongs."""
     containers = None
 
     def __init__(self, length, font, fontsize, color, bgcolor=None):
@@ -24,9 +22,7 @@ class Timer(Text):
         self.wrongs = []
 
     def add_wrong(self):
-        """
-        When the user messes up typing, add an X below timer.
-        """
+        """When the user messes up typing, add an X below timer."""
         wrong = Status(False)
         # Position.
         wrong.rect.center = self.rect.center
@@ -34,7 +30,7 @@ class Timer(Text):
 
         self.wrongs.append(wrong)
 
-    def update(self):
+    def update(self, *args, **kwargs):
         now = int(time.time())
         passed = now - self.start
         self.text = str(self.length - passed)

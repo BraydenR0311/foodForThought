@@ -4,6 +4,7 @@ import pygame as pg
 
 from paths import *
 from src.components.food import Food
+from src.components.tile import Tile
 from src.components.text import Quote, Text
 from src.components.generic import Generic
 
@@ -14,7 +15,7 @@ class Ticket(pg.sprite.Sprite):
     containers = None
     images = {}
 
-    def __init__(self, dishname):
+    def __init__(self, dish_name):
         super().__init__(self.containers)
         # Quote to type out. Author for ticket title.
         # Initialized by ticket manager.
@@ -32,15 +33,15 @@ class Ticket(pg.sprite.Sprite):
         self.image = self.images['ticket']
         self.rect = self.image.get_rect()
 
-        self.dishname = dishname
+        self.dish_name = dish_name
         # Text object that is used on the ticket.
         self.dishname_text = None
-        self.ingredients = self._get_ingredients(Food.DISH_DICT)
+        self.ingredients = self._get_ingredients(Food.get_menu())
 
         # Keep track out which ingredients are finished.
         self.cooked = []
         
-    def update(self):
+    def update(self, *args, **kwargs):
         # If all ingredients have been cooked.
         if len(self.cooked) >= 3:
             self.dishname_text.kill()
@@ -79,13 +80,13 @@ class Ticket(pg.sprite.Sprite):
         )
         self.author_face.kill()
         # Now that we have the author, create the dishname Text object.
-        self.dishname_text = Text(
-                ' '.join([self.lastname, self.dishname]),
+        self.dish_name_text = Text(
+                ' '.join([self.lastname, self.dish_name]),
                 ASSET_DIR / 'fonts' / 'pixel.ttf', 7, 'black'
         )
 
-    def _get_ingredients(self, dish_ingr_map):
-        return [Food(ingredient) for ingredient in dish_ingr_map[self.dishname]]
+    def _get_ingredients(self, menu):
+        return [Food(ingredient, Tile.get_images()) for ingredient in menu[self.dish_name]]
 
     @staticmethod
     def _split_quote(quote):
@@ -112,31 +113,31 @@ class TicketManager:
         self.spawnrate = spawnrate
         self.max_tickets = max_tickets
         self.quotes = quotes
-        self.choices = list(Food.DISH_DICT)
         self.spawning = False
 
         # Objects to be updated through the main loop.
         self.group = None
         self.shiftclock = None
 
-    def update(self, ticket_group: pg.sprite.Group, shiftclock):
+    def update(self, ticket_group: pg.sprite.Group, time_elapsed):
         self.group = ticket_group
-        self.shiftclock = shiftclock
+        self.time_elapsed = time_elapsed
         
         self.spawn_tickets()
         self.manage_locations()
 
     def spawn_tickets(self):
         # If not currently spawning and secs / spawn rate == 0.
+        secs = self.time_elapsed // 1000
         if (not self.spawning and
-            not self.shiftclock.secs % self.spawnrate and
+            not secs % self.spawnrate and
             len(self.group) < self.max_tickets):
-                food = random.choice(self.choices)
-                ticket = Ticket(food)
+                dish_name = random.choice(Food.get_dish_names())
+                ticket = Ticket(dish_name)
                 ticket.set_quote_data(self.quotes)
                 self.spawning = True
         elif (self.spawning and
-              self.shiftclock.secs % self.spawnrate):
+              secs % self.spawnrate):
             self.spawning = False
 
     def manage_locations(self):
@@ -179,5 +180,5 @@ class TicketManager:
             # Position the dish name.
             #TODO: Turn this into a ticket attribute
             
-            ticket.dishname_text.rect.bottomleft = ticket.rect.bottomleft
-            ticket.dishname_text.rect.move_ip(ticket.suboffset, -ticket.suboffset)
+            ticket.dish_name_text.rect.bottomleft = ticket.rect.bottomleft
+            ticket.dish_name_text.rect.move_ip(ticket.suboffset, -ticket.suboffset)

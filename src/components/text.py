@@ -33,7 +33,7 @@ class Quote(Text):
         self.wronged = False
         self.is_correct = False
 
-    def update(self):
+    def update(self, *args, **kwargs):
         self.image = self.font.render(self.text, 1, self.color, self.bgcolor)
         
         if self.user.text == self.text:
@@ -55,8 +55,9 @@ class Quote(Text):
             if self.wronged:
                 self.wronged = not self.wronged
             self.color = 'black'
+            
             self.user.image = self.font.render(self.user.text, 1, self.user.color)
-
+    
     # Needs pg.event.get() as events
     def handle_ipnut(self, events):
         for event in events:

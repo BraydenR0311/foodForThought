@@ -16,6 +16,7 @@ from paths import *
 from src.config import Config
 from src.utils.utils import read_tilemap, get_quotes, set_sprite_images
 from src.utils.gamemanager import GameManager, State
+from src.utils.audiomanager import AudioManager
 
 #TODO: Replace Status and Popup to Generic
 from src.components.button import Button
@@ -26,15 +27,13 @@ from src.components.shiftclock import ShiftClock
 from src.components.status import Status, Popup
 from src.components.text import Text, Quote
 from src.components.ticket import Ticket, TicketManager
-from src.components.tiles import Tile, Floor, Appliance
+from src.components.tile import Tile, Floor, Appliance, Table
 from src.components.timer import Timer
 
 pg.init()
-
 # Initialize game manager object.
 game_manager = GameManager()
 game_manager.load_screen() 
-screen = pg.display.set_mode((Config.WIDTH, Config.HEIGHT))
 background = pg.image.load(IMAGE_DIR / 'background.png').convert()
 
 # Create groups.
@@ -85,10 +84,9 @@ for cls in (
 Player.set_additional_images()
 
 # Initialize objects.
-ticketmanager = TicketManager(15, 7, game_manager.get_quotes())
+audiomanager = AudioManager()
 play = Button('play')
 quit_game = Button('quit')
-pressing_e = False
 
 running = True
 while running:
@@ -103,23 +101,19 @@ while running:
     keys = pg.key.get_pressed()
     mouse = pg.mouse.get_pressed()
 
+    # Loop through songs.
+    audiomanager.play_music()
+
+    # Apply background.
+    game_manager.draw_background(background)
+
     # Game starts in the main menu.
     if game_manager.state == State.MAIN_MENU:
-        # Initialize objects.
-        kitchen_rect = read_tilemap(ASSET_DIR / 'map.txt', Floor, Appliance)
-        if not players:
-            player = Player()
-        if not shiftclock_group:
-            shiftclock = ShiftClock(
-                '9:00', ASSET_DIR / 'fonts' / 'pixel.ttf', 20, 'black'
-            )
 
         mouse_pos = pg.mouse.get_pos()
         mouse = pg.mouse.get_pressed()
         click = mouse[0]
 
-        # Apply background.
-        game_manager.draw_background(background)
         # Draw only those in the 'buttons' group.
         game_manager.draw(buttons)
 
@@ -145,21 +139,30 @@ while running:
             if armed and not click and button.clicked:
                 button.clicked = False
                 if button.kind == 'play':
-                    shiftclock.start_time()
-                    game_manager.set_state(State.PLAYING)
+                    game_manager.set_state(State.INITIALIZING_ROUND)
                 elif button.kind == 'quit':
                     running = False
 
+    elif game_manager.state == State.INITIALIZING_ROUND:
+        # Initialize round objects.
+        ticketmanager = TicketManager(15, 7, game_manager.get_quotes())
+        kitchen_rect = read_tilemap(
+            ASSET_DIR / 'map.txt', Floor, Appliance,Table, Food.get_dish_names()
+        )
+        player = Player()
+        shiftclock = ShiftClock(
+            '9:00', ASSET_DIR / 'fonts' / 'pixel.ttf', 20, 'black'
+        )
+        pressing_e = False
+        game_manager.set_state(State.PLAYING)
+
     elif game_manager.state == State.PLAYING:
-
+        shiftclock.start()
+        print(shiftclock.get_elapsed())
         # After a certain amount of time, generate a ticket.
-        ticketmanager.update(tickets, shiftclock)
+        ticketmanager.update(tickets, shiftclock.get_elapsed())
+    
         
-        # Draw objects.
-        game_manager.draw_background(background)
-
-        # Update all objects.
-        all_sprites.update()
 
         game_manager.draw(
             kitchen,
@@ -219,8 +222,10 @@ while running:
         interaction = keys[pg.K_e]
 
         # Only interact with the closest appliance.
-        closest = min(appliances.sprites(),
-                      key=lambda x: player.center_vec.distance_to(x.center_vec))
+        closest = min(
+            appliances.sprites(),
+            key=lambda x: player.center_vec.distance_to(x.center_vec)
+        )
         
         for appliance in appliances:
             if appliance is not closest:
@@ -239,8 +244,11 @@ while running:
                     ingr_appliance = ingredient.APPLIANCE_DICT[ingredient.kind]
                     # Check if there is an ingredient that should be cooked on the
                     # selected appliance.
-                    if (ingr_appliance == closest.kind and
-                        ingredient not in ticket.cooked):
+                    if (
+                        ingr_appliance == closest.kind and
+                        ingredient not in ticket.cooked and
+                        closest.zone.colliderect(player)
+                    ):
                         ticket_to_cook = ticket
                         ingredient_to_cook = ingredient
                         # Choose tickets in order
@@ -251,11 +259,19 @@ while running:
         if not keys[pg.K_e]:
             pressing_e = False
 
-        pause = keys[pg.K_ESCAPE]        
+        pause = keys[pg.K_ESCAPE]  
+
+        # Update all objects.
+        all_sprites.update(
+            elapsed=shiftclock.get_elapsed(), # Keep track of time.
+            player_rect=player.rect, # Player location and hitbox
+            keys=keys, # Which keys are being pressed
+            closest = closest
+            )      
 
     elif game_manager.state == State.TYPING:
         # Continue spawning tickets even while typing
-        ticketmanager.update(tickets, shiftclock)
+        ticketmanager.update(tickets, shiftclock.get_elapsed())
         shiftclock.update()
         cook_timer.update()
         game_manager.draw_background(background)

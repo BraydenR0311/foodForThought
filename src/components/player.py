@@ -5,6 +5,7 @@ import pygame as pg
 from paths import *
 from src.utils.utils import get_screen_rect
 
+#TODO: change time to pg ticks
 class Player(pg.sprite.Sprite):
     IMAGE_PATHS = {
         'up': IMAGE_DIR / 'chef' / 'chef1.png',
@@ -28,8 +29,9 @@ class Player(pg.sprite.Sprite):
         self.image = self.images['up']
         self.rect = self.image.get_rect(center=get_screen_rect().center)
         self.time = time.time()
+        self.center_vec = pg.math.Vector2(*self.rect.center)
 
-    def update(self):
+    def update(self, *args, **kwargs):
         self.center_vec = pg.math.Vector2(*self.rect.center)
 
     def animate(self, anim):
