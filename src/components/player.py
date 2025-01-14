@@ -20,19 +20,46 @@ class Player(pg.sprite.Sprite):
     
     ANIM_SPEED = 0.2
 
-    def __init__(self):
+    def __init__(self, center):
         super().__init__(self.containers)
         self.index = 0
         self.speed = 2
         self.dx = 0
         self.dy = 0
         self.image = self.images['up']
-        self.rect = self.image.get_rect(center=get_screen_rect().center)
+        self.rect = self.image.get_rect(center=center)
         self.time = time.time()
-        self.center_vec = pg.math.Vector2(*self.rect.center)
+        self.center = (0,0)
+        self.ticket = None
 
-    def update(self, *args, **kwargs):
-        self.center_vec = pg.math.Vector2(*self.rect.center)
+    def update(self, closest, keys, *args, **kwargs):
+        self.center = pg.math.Vector2(*self.rect.center)
+        if (
+            # Within range of table.
+            self.rect.colliderect(closest.get_hitbox())
+            # A ticket is available.
+            and closest.get_order()
+            # Interaction key is pressed.
+            and keys[pg.K_e]
+        ):
+            # Order has been taken, so 'time since' exists. We are giving dish.
+            if closest.get_time_since_order():
+                self.give_dish(closest)
+            # Order has yet to be taken.
+            else:
+                self.take_order(closest)
+
+    def give_dish(self, table: pg.sprite.Sprite):
+        '''Give the dish to the table.'''
+        table.receive_dish()
+            
+    def take_order(self, table: pg.sprite.Sprite):
+        '''Receives order from a table.'''
+        self.order = table.get_order()
+
+    def get_distance_from(self, other: pg.sprite.Sprite):
+        '''Uses pygame's Vector2 to calculate Euclidean distance.'''
+        return self.center.distance_to(other.center)
 
     def animate(self, anim):
         self.elapsed = time.time() - self.time
