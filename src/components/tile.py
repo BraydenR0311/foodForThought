@@ -6,18 +6,13 @@ import pygame as pg
 from paths import *
 from src.config import Config
 from src.components.status import Popup
+from src.components.ticket import Ticket
+from shared_data import TILE_IMAGE_PATHS, MENU
+
 
 # Only inherited from.
 class Tile(ABC):
-    IMAGE_PATHS = {
-        '#': IMAGE_DIR / 'floor.png',
-        'x': IMAGE_DIR / 'floor.png',
-        'f': IMAGE_DIR / 'fryer.png',
-        'p': IMAGE_DIR / 'pantry.png',
-        'o': IMAGE_DIR / 'oven.png',
-        'c': IMAGE_DIR / 'cutting.png',
-        't': IMAGE_DIR / 'table.png'
-    }
+    IMAGE_PATHS = TILE_IMAGE_PATHS
 
     containers = None
     images = {}
@@ -43,30 +38,79 @@ class Floor(Tile, pg.sprite.Sprite):
 class Appliance(Tile, pg.sprite.Sprite):
     def __init__(self, kind, rect):
         super().__init__(kind, rect)
+        # Define the allowable area for player interaction.
         self.zone = self.rect.inflate(70, 70)
-        self.popup = Popup(self.rect.center)
-        self.center_vec = pg.math.Vector2(*self.rect.center)
+        self.popup = Popup(self.rect.center, 'e_hint')
+        self.center = pg.math.Vector2(*self.rect.center)
+
+    def update(self, player_rect, closest, *args, **kwargs):
+        if self is closest and self.zone.colliderect(player_rect):
+            print('closest', self.rect)
+            self.popup.add(Popup.containers)
+        else:
+            self.popup.kill()
+
+    def get_hitbox(self) -> pg.Rect:
+        '''Return the area where the user can interact.'''
+        return self.zone
 
 class Table(Appliance, pg.sprite.Sprite):
-    order_cooldown = 15
-    max_order_time = 30
-    def __init__(self, kind, rect, dish_names):
+    # Minimum time until table can order again after receiving food or game start.
+    ORDER_COOLDOWN = 15
+    # Max amount of time a table can decide what to order.
+    MAX_COOLDOWN_TIME = 30
+    # Will leave at this time.
+    TIME_BEFORE_LEAVE = 60
+
+    def __init__(self, kind, rect):
         super().__init__(kind, rect)
-        self.player_rect = None
-        self.keys = None
-        self.is_closest = False
+        # A popup that says 'waiter!'.
+        self.popup = Popup(self.rect.center, 'order')
+        # A randomly chosen order. None if haven't ordered yet or just received food.
+        self.ticket = None
+        # Table's awareness of time passed since round start.
         self.elapsed = 0
-        self.time_since_order = 0
-        self.dish_names = dish_names
+        # Marks the time that the order was taken. 0 if haven't ordered yet.
+        self.time_of_order = None
 
-    def update(self, elapsed, player_rect, keys, closest, *args, **kwargs):
+    def update(self, elapsed, *args, **kwargs):
         self.elapsed = elapsed
-        self.player_rect = player_rect
-        self.keys = keys
-        if self is closest:
-            is_closest = True
+        if self.elapsed > self.ORDER_COOLDOWN:
+            self.decide_order()
 
-    def order(self):
-        dish = random.choice(self.dish_names)
+    def decide_order(self):
+        '''Choose an item to order and call for the chef.'''
+        # Already chose an order.
+        if self.ticket:
+            return
+        # Waiter, I'd like a...
+        self.ticket = Ticket(random.choice(MENU))
+        # Show popup.
         self.popup.add(Popup.containers)
-  
+
+    def get_order(self):
+        '''Return the ticket object with the randomly decided dish.'''
+        # An order has been decided.
+        if self.ticket: 
+            # Mark time when order was taken.
+            self.time_of_order = self.elapsed 
+        return self.ticket
+    
+    def get_time_since_order(self):
+        '''Calculate how long since user interacted and received the order.'''
+        # Order has not been taken yet.
+        if not self.time_of_order:
+            return None
+        return self.elapsed - self.time_of_order
+    
+    def receive_dish(self):
+        '''Handles logic for a table getting a dish.'''
+        # Remove the sprite from the game.
+        self.ticket.kill()
+        self.ticket = None
+        # Reset the time of order to None, since table hasn't ordered yet.
+        self.time_of_order = None
+
+
+
+    
