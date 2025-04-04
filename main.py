@@ -14,9 +14,10 @@ import pygame as pg
 import random
 from paths import *
 from src.config import Config
-from src.utils.utils import read_tilemap, get_quotes, set_sprite_images
+from src.utils.utils import read_tilemap, set_sprite_images
 from src.utils.gamemanager import GameManager, State
 from src.utils.audiomanager import AudioManager
+from src.utils.tablemanager import TableManager
 
 #TODO: Replace Status and Popup to Generic
 from src.components.button import Button
@@ -24,9 +25,9 @@ from src.components.food import Food
 from src.components.generic import Generic
 from src.components.player import Player
 from src.components.shiftclock import ShiftClock
-from src.components.status import Status, Popup
-from src.components.text import Text, Quote
-from src.components.ticket import Ticket, TicketManager
+from src.components.popup import Popup
+from src.components.text import Text, QuoteSection
+from src.components.ticket import Ticket
 from src.components.tile import Tile, Floor, Appliance, Table
 from src.components.timer import Timer
 
@@ -52,6 +53,7 @@ statuses = pg.sprite.Group()
 cook_timer = pg.sprite.Group()
 generics = pg.sprite.Group()
 shiftclock_group = pg.sprite.GroupSingle()
+tables = pg.sprite.Group()
 
 # Assign sprite classes to certain groups.
 Appliance.containers = appliances, kitchen, all_sprites
@@ -61,19 +63,18 @@ Food.containers = foods, all_sprites
 Generic.containers = generics, all_sprites
 Player.containers = players, all_sprites
 Popup.containers = popups, all_sprites
-Quote.containers = quotes, all_sprites
+QuoteSection.containers = quotes, all_sprites
 ShiftClock.containers = shiftclock_group, all_sprites
-Status.containers = statuses, all_sprites
 Text.containers = texts, all_sprites
 Ticket.containers = tickets, all_sprites
 Timer.containers = cook_timer, all_sprites
+Table.containers = appliances, tables, kitchen, all_sprites
 
 # Set images for each class.
 for cls in (
     Food,
     Player,
     Tile,
-    Status,
     Popup,
     Button,
     Ticket
@@ -106,6 +107,11 @@ while running:
 
     # Apply background.
     game_manager.draw_background(background)
+
+    # Things that need to happen during both phases.
+    if game_manager.state == State.PLAYING or game_manager.state == State.TYPING:
+        print(f'In playing or typing. state: {game_manager.state}')
+        
 
     # Game starts in the main menu.
     if game_manager.state == State.MAIN_MENU:
@@ -143,43 +149,48 @@ while running:
                 elif button.kind == 'quit':
                     running = False
 
-    elif game_manager.state == State.INITIALIZING_ROUND:
+    if game_manager.state == State.INITIALIZING_ROUND:
         # Initialize round objects.
-        ticketmanager = TicketManager(15, 7, game_manager.get_quotes())
         kitchen_rect = read_tilemap(
-            ASSET_DIR / 'map.txt', Floor, Appliance,Table, Food.get_dish_names()
+            ASSET_DIR / 'map.txt',
+            Player,
+            Floor,
+            Appliance,
+            Table,
         )
-        player = Player()
-        shiftclock = ShiftClock(
-            '9:00', ASSET_DIR / 'fonts' / 'pixel.ttf', 20, 'black'
-        )
+        tablemanager = TableManager(tables)
+        # TODO: Old shiftclock still exists. kill it.
+        # Create new shiftclock.
+        shiftclock = ShiftClock('9:00', 20, 'black')
         pressing_e = False
         game_manager.set_state(State.PLAYING)
 
-    elif game_manager.state == State.PLAYING:
-        shiftclock.start()
-        print(shiftclock.get_elapsed())
-        # After a certain amount of time, generate a ticket.
-        ticketmanager.update(tickets, shiftclock.get_elapsed())
     
-        
 
+    if game_manager.state == State.PLAYING:
+        # Begin keeping track of time. Pauses when game is paused, and resets when
+        # new round begins.
+        shiftclock.start()
+    
         game_manager.draw(
             kitchen,
             players,
-            popups,
             tickets,
             foods,
             statuses,
             generics,
             texts,
-            shiftclock_group
+            shiftclock_group,
+            popups
         )
+
+
+        player = players.sprites()[0]
 
         # TODO: create player method 'move(direction)'
         # Direction controls and collision with appliances.
         keys = pg.key.get_pressed()
-
+ 
         # Directional Keybindings
         up = keys[pg.K_w]
         down = keys[pg.K_s]
@@ -223,41 +234,28 @@ while running:
 
         # Only interact with the closest appliance.
         closest = min(
-            appliances.sprites(),
-            key=lambda x: player.center_vec.distance_to(x.center_vec)
+            appliances,
+            key=lambda appliance: player.get_distance_from(appliance)
         )
-        
-        for appliance in appliances:
-            if appliance is not closest:
-                appliance.popup.kill()
 
-        if closest.zone.colliderect(player):
-            closest.popup.add(Popup.containers)
-        else:
-            closest.popup.kill()
-
-        if interaction and not pressing_e:
-            # First elligible ingredient wanted.
-            # Reversing gives oldest first.
-            for ticket in reversed(tickets.sprites()): 
-                for ingredient in reversed(ticket.ingredients):
-                    ingr_appliance = ingredient.APPLIANCE_DICT[ingredient.kind]
-                    # Check if there is an ingredient that should be cooked on the
-                    # selected appliance.
-                    if (
-                        ingr_appliance == closest.kind and
-                        ingredient not in ticket.cooked and
-                        closest.zone.colliderect(player)
-                    ):
-                        ticket_to_cook = ticket
-                        ingredient_to_cook = ingredient
-                        # Choose tickets in order
-                        quote = ticket.quotes[0]
-                        quote.add(being_cooked_group)
-                        game_manager.set_state(State.TYPING)
-
-        if not keys[pg.K_e]:
-            pressing_e = False
+        # Player is giving taking order or giving a dish to the table.
+        if (
+            # Within range of table.
+            player.rect.colliderect(closest.get_hitbox()) and
+            # Interaction key is pressed.
+            keys[pg.K_e]
+        ):
+            # Closest appliance is a table and is ready to order.
+            if closest in tables and closest.order:
+                player.take_order(closest)
+            # Closest appliance is a kitchen appliance.
+            elif closest not in tables:
+                if player.ticket:
+                    quote = player.ticket.quote_sections[0]
+                    for ingr in player.ticket.ingredients:
+                        if closest.kind == ingr.APPLIANCE_DICT[ingr.kind]:
+                            ingredient_to_cook = ingr
+                            game_manager.set_state(State.TYPING)
 
         pause = keys[pg.K_ESCAPE]  
 
@@ -267,17 +265,21 @@ while running:
             player_rect=player.rect, # Player location and hitbox
             keys=keys, # Which keys are being pressed
             closest = closest
-            )      
+            )
 
-    elif game_manager.state == State.TYPING:
+        tablemanager.update(shiftclock.get_elapsed())
+        
+        # One loop in State.PLAYING has passed. User can interact now.
+        if not keys[pg.K_e]:
+            pressing_e = False
+
+    if game_manager.state == State.TYPING:
         # Continue spawning tickets even while typing
-        ticketmanager.update(tickets, shiftclock.get_elapsed())
         shiftclock.update()
         cook_timer.update()
-        game_manager.draw_background(background)
-
         quotes.update()
 
+        game_manager.draw_background(background)
         game_manager.draw(
             kitchen,
             players,
@@ -292,8 +294,9 @@ while running:
         )
 
         # Logic for typing.
-        quote.handle_ipnut(events)
+        quote.handle_input(events)
 
+        # Prevent user from holding E and reentering typing phase.
         if keys[pg.K_e]:
             pressing_e = True
         else:
@@ -304,19 +307,19 @@ while running:
             # Set the timer duration according to quote length.
             timer = Timer(
                 len(quote.text.split()) + 3,
-                ASSET_DIR / 'fonts' / 'pixel.ttf',
-                80, 'black'
+                80,
+                'black'
             )
+            print(timer.text)
 
         # Add wrongs if mess up.
-        if (quote.wrongs > len(timer.wrongs) and
-            quote.wrongs < 3):
+        if (quote.misses > len(timer.wrongs) and
+            quote.misses < 3):
             timer.add_wrong()
 
         # If time runs out or user messes up 3 times.
-        if int(timer.text) == 0 or quote.wrongs >= 3:
-            quote.user.kill()
-            quote.kill()
+        if int(timer.text) == 0 or quote.misses >= 3:
+            quote.finish_incorrectly()
             ingredient_to_cook.status.make_wrong()
             ingredient_to_cook.status.add(Status.containers)
             ticket_to_cook.cooked.append(ingredient_to_cook)
@@ -328,7 +331,7 @@ while running:
 
             game_manager.set_state(State.PLAYING)
         
-        if quote.is_correct:
+        if quote.is_final_correct:
             ingredient_to_cook.status.add(Status.containers)
             ticket_to_cook.cooked.append(ingredient_to_cook)
             ticket_to_cook.quotes.remove(quote)

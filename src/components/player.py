@@ -4,6 +4,8 @@ import pygame as pg
 
 from paths import *
 from src.utils.utils import get_screen_rect
+from src.components.ticket import Ticket
+from src.components.tile import Table
 
 #TODO: change time to pg ticks
 class Player(pg.sprite.Sprite):
@@ -29,33 +31,22 @@ class Player(pg.sprite.Sprite):
         self.image = self.images['up']
         self.rect = self.image.get_rect(center=center)
         self.time = time.time()
-        self.center = (0,0)
+        self.center = pg.math.Vector2(0,0)
         self.ticket = None
 
     def update(self, closest, keys, *args, **kwargs):
+        # TODO: Move this to main game loop
         self.center = pg.math.Vector2(*self.rect.center)
-        if (
-            # Within range of table.
-            self.rect.colliderect(closest.get_hitbox())
-            # A ticket is available.
-            and closest.get_order()
-            # Interaction key is pressed.
-            and keys[pg.K_e]
-        ):
-            # Order has been taken, so 'time since' exists. We are giving dish.
-            if closest.get_time_since_order():
-                self.give_dish(closest)
-            # Order has yet to be taken.
-            else:
-                self.take_order(closest)
 
-    def give_dish(self, table: pg.sprite.Sprite):
+    def take_order(self, table: Table) -> None:
+        '''Receives order from a table if not already busy with another.'''
+        if not self.ticket:
+            self.ticket = Ticket(table.tell_order())
+
+    def give_dish(self, table: Table):
         '''Give the dish to the table.'''
         table.receive_dish()
-            
-    def take_order(self, table: pg.sprite.Sprite):
-        '''Receives order from a table.'''
-        self.order = table.get_order()
+        self.ticket.kill()
 
     def get_distance_from(self, other: pg.sprite.Sprite):
         '''Uses pygame's Vector2 to calculate Euclidean distance.'''
@@ -70,11 +61,10 @@ class Player(pg.sprite.Sprite):
             self.time = time.time()
             self.index += 1
 
-    #TODO: create class method to init animation (rotated images).
     @classmethod
     def set_additional_images(cls):
-        """Image transformations and animations needed
-        for this class."""
+        '''Image transformations and animations needed for this class.'''
+
         new_images = {
             'down': pg.transform.rotate(cls.images['up'], 180),
             'left': pg.transform.rotate(cls.images['up'], 90),

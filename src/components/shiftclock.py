@@ -9,8 +9,10 @@ class ShiftClock(Text):
     SECS_IN_HOUR = 15
     containers = None
 
-    def __init__(self, text, font, fontsize, color, bgcolor=None):
-        super().__init__(text, font, fontsize, color, bgcolor)
+    def __init__(self, fontsize, color, bgcolor=None):
+        super().__init__(fontsize, color, bgcolor)
+        # Working day starts at 9 AM.
+        self.text = '9:00'
         self.hour = 9
         self.tick = False # The clock is currently changing.
         self.start_time = 0
@@ -18,10 +20,8 @@ class ShiftClock(Text):
         self.pause_start = 0
         self.is_running = False
 
-        self.image = self.font.render(
-            self.text, 1, self.color, self.bgcolor
-        )
-        self.rect = self.image.get_rect()
+        self.image = None
+        self.rect = None
 
     def update(self, *args, **kwargs):
         self.update_text()
@@ -32,7 +32,7 @@ class ShiftClock(Text):
         if not self.is_running:
             self.is_running = True
             if self.pause_start:
-                self.paused_time += pg.time.get_ticks() - self.pause_start()
+                self.paused_time += pg.time.get_ticks() - self.pause_start
 
     def pause(self):
         if self.is_running:
