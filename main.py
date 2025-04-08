@@ -14,7 +14,7 @@ import pygame as pg
 import random
 from paths import *
 from src.config import Config
-from src.utils.utils import read_tilemap, set_sprite_images
+from src.utils.utils import get_screen_rect, read_tilemap, set_sprite_images
 from src.utils.gamemanager import GameManager, State
 from src.utils.audiomanager import AudioManager
 from src.utils.tablemanager import TableManager
@@ -88,8 +88,7 @@ Player.set_additional_images()
 
 # Initialize objects.
 audiomanager = AudioManager()
-play = Button('play')
-quit_game = Button('quit')
+screen_center = get_screen_rect().center
 
 running = True
 while running:
@@ -117,6 +116,11 @@ while running:
     # Game starts in the main menu.
     if game_manager.state == State.MAIN_MENU:
 
+        if not buttons:
+            Button('play', (screen_center[0], screen_center[1] - 150))
+            Button('quit', (screen_center[0], screen_center[1] + 150))
+
+
         mouse_pos = pg.mouse.get_pos()
         mouse = pg.mouse.get_pressed()
         click = mouse[0]
@@ -124,31 +128,17 @@ while running:
         # Draw only those in the 'buttons' group.
         game_manager.draw(buttons)
 
-        # Button logic.
-        # Not encapsulated, same as player movement logic.
-        for button in buttons.sprites():
-            # Mouse hovering over button.
-            armed = button.rect.collidepoint(mouse_pos)
-            # Nothing done to button.
-            if not armed and not click:
-                button.armed = False
-                button.unarm()
-                button.clicked = False
-            # Mouse is hovering.
-            if armed and not button.armed:
-                button.armed = True
-                button.arm()
-            # Hovering and left click held.
-            if armed and click and not button.clicked:
-                button.click()
-                button.clicked = True  
-            # Activate button.
-            if armed and not click and button.clicked:
-                button.clicked = False
-                if button.kind == 'play':
-                    game_manager.set_state(State.INITIALIZING_ROUND)
-                elif button.kind == 'quit':
-                    running = False
+        for button in buttons:
+            if button.kind == 'play' and button.activated:
+                game_manager.set_state(State.INITIALIZING_ROUND)
+                for button in buttons:
+                    button.kill()
+            if button.kind == 'quit' and button.activated:
+                running = False
+
+        # Pass mouse position and click data every frame to buttons.
+        buttons.update(mouse_pos, click)
+
 
     if game_manager.state == State.INITIALIZING_ROUND:
         # Initialize round objects.
