@@ -68,7 +68,7 @@ def read_tilemap(path,
     return kitchen_rect
 
 
-def get_quotes(file: str | Path) -> dict[str, list]:
+def get_quotes(file: str | Path) -> list:
     """Parse json file and return dictionary in the form of
     {author: quote}
     """

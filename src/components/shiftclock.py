@@ -9,8 +9,8 @@ class ShiftClock(Text):
     SECS_IN_HOUR = 15
     containers = None
 
-    def __init__(self, fontsize, color, bgcolor=None):
-        super().__init__(fontsize, color, bgcolor)
+    def __init__(self, bgcolor=None):
+        super().__init__(20, 'black', bgcolor)
         # Working day starts at 9 AM.
         self.text = '9:00'
         self.hour = 9

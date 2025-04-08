@@ -11,7 +11,7 @@ from src.shared_data import QUOTE_DATA
 from src.utils.utils import get_screen_rect
 
 class Ticket(pg.sprite.Sprite):
-    '''Manages QuoteSection and Food objects.'''
+    """Manages QuoteSection and Food objects."""
     # First element(s) from top will be pushed down 30px.
     FIRST_OFFSET = 30
     # Offset for the rest of the elements displayed on the ticket.
@@ -49,16 +49,19 @@ class Ticket(pg.sprite.Sprite):
         
     def update(self, *args, **kwargs):
         # Values will be True or False if quote is completed. Not None.
-        if all(quote.is_final_correct is not None for quote in self.quote_sections):
+        if all(
+            quote_sec.is_final_correct is not None
+            for quote_sec in self.quote_sections
+        ):
             self._finish()
             
     def get_score(self):
-        '''Retuns count of how many food items were cooked correctly.'''
+        """Retuns count of how many food items were cooked correctly."""
         return sum(quote.is_final_correct for quote in self.quote_sections)
 
     def _set_quote_data(self) -> None:
-        '''Choose a random quote and parse though its data to set values
-        for this ticket.'''
+        """Choose a random quote and parse though its data to set values
+        for this ticket."""
         # Get random quote from quote data.
         quote_data = random.choice(QUOTE_DATA)
         # Extract data.        
@@ -83,11 +86,11 @@ class Ticket(pg.sprite.Sprite):
         )
 
     def _get_ingredients(self) -> list[Food]:
-        '''Create Food objects based on the dish and its ingredients.'''
+        """Create Food objects based on the dish and its ingredients."""
         return [Food(ingredient) for ingredient in MENU[self.dish_name]]
 
     def _finish(self):
-        '''Player has finished all 3 quotes.'''
+        """Player has finished all 3 quotes."""
         for ingredient in self.ingredients:
             ingredient.kill()
             ingredient.appliance_hint.kill()
@@ -96,7 +99,7 @@ class Ticket(pg.sprite.Sprite):
         self.kill()
     
     def _set_author_image(self, author_id) -> None:
-        '''Helper method to create the author's face image and position.'''
+        """Helper method to create the author's face image and position."""
         self.author_image = Generic(
             (IMAGE_DIR / 'faces' / author_id).with_suffix('.jpg')
         )
@@ -106,7 +109,7 @@ class Ticket(pg.sprite.Sprite):
         self.rect.move_ip(-10, 0)
 
     def _position_items(self):
-        '''Position self and objects within self.'''
+        """Position self and objects within self."""
         # Position self.
         self.rect.midtop = get_screen_rect().midtop
         self.rect.move_ip(0, self.SUBOFFSET)
@@ -134,7 +137,7 @@ class Ticket(pg.sprite.Sprite):
             self.dish_name_text.rect.move_ip(self.SUBOFFSET, -self.SUBOFFSET)
 
     def _undraw(self):
-        '''Use when initializing so elements are not drawn yet.'''
+        """Use when initializing so elements are not drawn yet."""
         self.kill()
         self.dish_name_text.kill()
         for ingredient in self.ingredients:
@@ -149,7 +152,7 @@ class Ticket(pg.sprite.Sprite):
 
     @staticmethod
     def _split_quote(quote):
-        '''Helper method to split the quote into even chunks.'''
+        """Helper method to split the quote into even chunks."""
         quote = quote.split()
         chunk_len = len(quote) // 3
 
