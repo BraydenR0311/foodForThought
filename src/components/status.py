@@ -32,5 +32,5 @@ class Popup(pg.sprite.Sprite):
         self.rect.move_ip(0, -25)
         self.kill()
 
-    def update(self):
+    def update(self, *args, **kwargs):
         pass

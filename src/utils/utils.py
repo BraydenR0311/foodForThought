@@ -17,17 +17,22 @@ def set_sprite_images(cls):
 def get_screen_rect():
     return pg.display.get_surface().get_rect()
 
-def read_tilemap(path, floor_cls, appliance_cls) -> pg.Rect:
+def read_tilemap(path,
+    floor_cls,
+    appliance_cls,
+    table_cls,
+    dish_names
+) -> pg.Rect:
     with open(path, 'r', encoding='utf-8') as infile:
             tilemap = infile.read().splitlines()
 
     gridwidth = len(tilemap[0])
-    if gridwidth % 2 == 0:
+    if gridwidth % 2 == 0: # Grid has even number of tiles.
         topleftx = (get_screen_rect().centerx
                     - (gridwidth // 2 * Config.TILESIZE))
         toplefty = (get_screen_rect().centery
                     - (gridwidth // 2 * Config.TILESIZE))
-    else:
+    else: # Grid has odd number of tiles.
         topleftx = (get_screen_rect().centerx
                     - (gridwidth // 2 * Config.TILESIZE)
                     - (Config.TILESIZE // 2))
@@ -37,12 +42,16 @@ def read_tilemap(path, floor_cls, appliance_cls) -> pg.Rect:
 
     for i, row in enumerate(tilemap):
         for j, tile in enumerate(row):
-            rect = pg.Rect(topleftx + j*Config.TILESIZE,
-                           toplefty + i*Config.TILESIZE,
-                           Config.TILESIZE,
-                           Config.TILESIZE)
+            rect = pg.Rect(
+                topleftx + j*Config.TILESIZE,
+                toplefty + i*Config.TILESIZE,
+                Config.TILESIZE,
+                Config.TILESIZE
+            )
             if tile == '#':
                 floor_cls(tile, rect)
+            elif tile == 't':
+                table_cls(tile, rect, dish_names)
             else:
                 appliance_cls(tile, rect)
 

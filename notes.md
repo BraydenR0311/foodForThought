@@ -1,0 +1,3 @@
+- round starts:
+    - in a few seconds one table orders
+    - decrease chance for other tables to order

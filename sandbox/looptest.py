@@ -10,9 +10,9 @@ while running:
     for event in pg.event.get():
         if event.type == pg.QUIT:
             running = False
-        if event.type == pg.KEYDOWN and event.key == pg.K_d:
-            pg.event.
     screen.fill('white')
+
+    print(pg.time.get_ticks())
 
     pg.display.flip()
     clock.tick(60)

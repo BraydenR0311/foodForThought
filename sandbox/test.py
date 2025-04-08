@@ -60,7 +60,7 @@ class Player(pygame.sprite.Sprite):
         self.change_x += x
         self.change_y += y
  
-    def update(self):
+    def update(self, *args, **kwargs):
         """ Update the player position. """
         # Move left/right
         self.rect.x += self.change_x

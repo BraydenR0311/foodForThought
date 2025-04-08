@@ -20,7 +20,7 @@ while data:
     # Take a random quote and remove from list to prevent duplicates.
     data.remove(quote_data := random.choice(data))
     author_id = quote_data['philosopher']['id']
-    quote = quote_data['quote']
+    quote = unidecode(quote_data['quote'])
 
     # Get philosopher data from unique id.
     response = requests.get(PHILOSOPHER_URL / author_id)

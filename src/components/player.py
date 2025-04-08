@@ -4,7 +4,10 @@ import pygame as pg
 
 from paths import *
 from src.utils.utils import get_screen_rect
+from src.components.ticket import Ticket
+from src.components.tile import Table
 
+#TODO: change time to pg ticks
 class Player(pg.sprite.Sprite):
     IMAGE_PATHS = {
         'up': IMAGE_DIR / 'chef' / 'chef1.png',
@@ -19,18 +22,35 @@ class Player(pg.sprite.Sprite):
     
     ANIM_SPEED = 0.2
 
-    def __init__(self):
+    def __init__(self, center):
         super().__init__(self.containers)
         self.index = 0
         self.speed = 2
         self.dx = 0
         self.dy = 0
         self.image = self.images['up']
-        self.rect = self.image.get_rect(center=get_screen_rect().center)
+        self.rect = self.image.get_rect(center=center)
         self.time = time.time()
+        self.center = pg.math.Vector2(0,0)
+        self.ticket = None
 
-    def update(self):
-        self.center_vec = pg.math.Vector2(*self.rect.center)
+    def update(self, closest, keys, *args, **kwargs):
+        # TODO: Move this to main game loop
+        self.center = pg.math.Vector2(*self.rect.center)
+
+    def take_order(self, table: Table) -> None:
+        '''Receives order from a table if not already busy with another.'''
+        if not self.ticket:
+            self.ticket = Ticket(table.tell_order())
+
+    def give_dish(self, table: Table):
+        '''Give the dish to the table.'''
+        table.receive_dish()
+        self.ticket.kill()
+
+    def get_distance_from(self, other: pg.sprite.Sprite):
+        '''Uses pygame's Vector2 to calculate Euclidean distance.'''
+        return self.center.distance_to(other.center)
 
     def animate(self, anim):
         self.elapsed = time.time() - self.time
@@ -41,11 +61,10 @@ class Player(pg.sprite.Sprite):
             self.time = time.time()
             self.index += 1
 
-    #TODO: create class method to init animation (rotated images).
     @classmethod
     def set_additional_images(cls):
-        """Image transformations and animations needed
-        for this class."""
+        '''Image transformations and animations needed for this class.'''
+
         new_images = {
             'down': pg.transform.rotate(cls.images['up'], 180),
             'left': pg.transform.rotate(cls.images['up'], 90),
