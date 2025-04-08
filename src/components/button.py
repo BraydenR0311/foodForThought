@@ -15,7 +15,7 @@ class Button(pg.sprite.Sprite):
     def __init__(self, kind: str):
         super().__init__(self.containers)
         self.kind = kind
-        self.image: pg.Surface = self.images[self.kind]
+        self.image = self.images[self.kind]
         self.rect = self.align_rect()
         self.clicked = False
         self.armed = False

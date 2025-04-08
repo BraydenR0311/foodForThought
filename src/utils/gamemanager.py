@@ -25,7 +25,7 @@ class GameManager:
         self.screen = screen
 
     def draw_background(self, background_image: pg.Surface):
-        self.screen.blit(background_image)
+        self.screen.blit(background_image, (0, 0))
 
     def draw(self, *groups):
         """Draws groups to the screen in order listed."""

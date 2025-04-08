@@ -36,7 +36,7 @@ class Appliance(Tile, pg.sprite.Sprite):
         super().__init__(kind, rect)
         # Define the allowable area for player interaction.
         self.zone = self.rect.inflate(70, 70)
-        self.popup = Popup(self.rect.center, 'e_hint')
+        self.popup = Popup(self.rect.center)
         self.center = pg.math.Vector2(*self.rect.center)
 
     def update(self, player_rect, closest, *args, **kwargs):
@@ -72,7 +72,7 @@ class Table(Appliance, pg.sprite.Sprite):
     def __init__(self, kind, rect):
         super().__init__(kind, rect)
         # A popup that says 'waiter!'.
-        self.popup = Popup(self.rect.center, 'order')
+        self.popup = Popup(self.rect.center)
         # A randomly chosen order. None if haven't ordered yet or just received food.
         self.order = None
 

@@ -1,4 +1,5 @@
 import pygame as pg
+from paths import *
 
 class Config:
     # Screen dimensions.
@@ -12,3 +13,6 @@ class Config:
     # Quote constants.
     QUOTE_MIN = 12
     QUOTE_MAX = 40
+
+    # Fonts.
+    DEFAULT_FONT = FONT_DIR / 'pixel.ttf'

@@ -31,6 +31,8 @@ from src.components.ticket import Ticket
 from src.components.tile import Tile, Floor, Appliance, Table
 from src.components.timer import Timer
 
+from src.shared_data import *
+
 pg.init()
 # Initialize game manager object.
 game_manager = GameManager()
@@ -110,8 +112,7 @@ while running:
 
     # Things that need to happen during both phases.
     if game_manager.state == State.PLAYING or game_manager.state == State.TYPING:
-        print(f'In playing or typing. state: {game_manager.state}')
-        
+        pass
 
     # Game starts in the main menu.
     if game_manager.state == State.MAIN_MENU:
@@ -156,7 +157,7 @@ while running:
             Player,
             Floor,
             Appliance,
-            Table,
+            Table
         )
         tablemanager = TableManager(tables)
         # TODO: Old shiftclock still exists. kill it.

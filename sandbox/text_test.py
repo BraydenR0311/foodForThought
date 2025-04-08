@@ -1,6 +1,6 @@
 import pygame as pg
+from config import Config
 from paths import *
-from constants import *
 import string
 
 pg.init()
@@ -15,13 +15,20 @@ class Text(pg.sprite.Sprite):
 
     containers = None
 
-    def __init__(self, text, font, fontsize, color, bgcolor=None):
+    def __init__(self, text, fontsize, color, bgcolor=None):
         super().__init__(self.containers)
         self.text = text
-        self.font = pg.font.Font(font, fontsize)
+        self.font = pg.font.Font(Config.DEFAULT_FONT, fontsize)
         self.color = color
         self.bgcolor = bgcolor
-        self.image = self.font.render(self.text, 1, self.color, self.bgcolor)
+        self.image = self.font.render(
+            self.text,
+            True,
+            self.color,
+            self.bgcolor
+        )
+
+
         self.rect = self.image.get_rect()
 
 class Quote(Text):

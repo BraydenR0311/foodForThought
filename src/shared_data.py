@@ -1,7 +1,7 @@
 from paths import *
-from src.utils.utils import get_quote_data
+from src.utils.utils import get_quotes
 
-QUOTE_DATA = get_quote_data(ASSET_DIR / 'quotes.json')
+QUOTE_DATA = get_quotes(ASSET_DIR / 'quotes.json')
 
 TILE_IMAGE_PATHS = {
         '#': IMAGE_DIR / 'floor.png',

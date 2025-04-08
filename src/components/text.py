@@ -2,6 +2,7 @@ import string
 
 import pygame as pg
 
+from src.config import Config
 from paths import *
 from src.utils.utils import get_screen_rect
 
@@ -12,7 +13,7 @@ class Text(pg.sprite.Sprite):
     def __init__(self, text, fontsize, color, bgcolor=None):
         super().__init__(self.containers)
         self.text = str(text)
-        self.font = pg.font.Font(FONT_DIR / 'pixel.ttf', fontsize)
+        self.font = pg.font.Font(Config.DEFAULT_FONT, fontsize)
         self.color = color
         self.bgcolor = bgcolor
         self.image = self.font.render(self.text, 1, self.color, self.bgcolor)
