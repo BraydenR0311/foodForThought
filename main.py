@@ -152,7 +152,7 @@ while running:
         tablemanager = TableManager(tables)
         # TODO: Old shiftclock still exists. kill it.
         # Create new shiftclock.
-        shiftclock = ShiftClock('9:00', 20, 'black')
+        shiftclock = ShiftClock('9:00')
         pressing_e = False
         game_manager.set_state(State.PLAYING)
 
@@ -220,9 +220,6 @@ while running:
         # Keep chef in the kitchen.
         player.rect.clamp_ip(kitchen_rect)
 
-        # Manage interaction between player and appliances.
-        interaction = keys[pg.K_e]
-
         # Only interact with the closest appliance.
         closest = min(
             appliances,
@@ -241,7 +238,9 @@ while running:
                 player.take_order(closest)
             # Closest appliance is a kitchen appliance.
             elif closest not in tables:
+                # Player has already taken an order.
                 if player.ticket:
+                    # Get quote sections in order.
                     quote = player.ticket.quote_sections[0]
                     for ingr in player.ticket.ingredients:
                         if closest.kind == ingr.APPLIANCE_DICT[ingr.kind]:
