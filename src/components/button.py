@@ -3,10 +3,11 @@ import pygame as pg
 from paths import *
 from src.utils.utils import get_screen_rect
 
+
 class Button(pg.sprite.Sprite):
     IMAGE_PATHS = {
-        'play': IMAGE_DIR / 'buttons' / 'play.png',
-        'quit': IMAGE_DIR / 'buttons' / 'quit.png'
+        "play": IMAGE_DIR / "buttons" / "play.png",
+        "quit": IMAGE_DIR / "buttons" / "quit.png",
     }
 
     containers = None
@@ -21,6 +22,9 @@ class Button(pg.sprite.Sprite):
         self.clicked = False
         self.armed = False
         self.activated = False
+
+    def is_activated(self):
+        return self.activated
 
     def update(self, mouse_pos, click, *args, **kwargs):
         # If previously activated, deactivate.
@@ -44,18 +48,18 @@ class Button(pg.sprite.Sprite):
         # Hovering and left click held.
         if armed and click and not self.clicked:
             self.click()
-            self.clicked = True  
+            self.clicked = True
 
         # Activate self.
         if armed and not click and self.clicked:
             self.clicked = False
             self.activated = True
-    
+
     def arm(self):
-        self.image = pg.transform.hsl(self.image, lightness = -.2)
+        self.image = pg.transform.hsl(self.image, lightness=-0.2)
 
     def unarm(self):
         self.image = self.images[self.kind]
 
     def click(self):
-        self.image = pg.transform.hsl(self.image, lightness = -.3)
+        self.image = pg.transform.hsl(self.image, lightness=-0.3)
