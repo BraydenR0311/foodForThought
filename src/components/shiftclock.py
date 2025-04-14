@@ -10,9 +10,9 @@ class ShiftClock(Text):
     containers = None
 
     def __init__(self, bgcolor=None):
-        super().__init__(20, 'black', bgcolor)
         # Working day starts at 9 AM.
         self.text = '9:00'
+        super().__init__(self.text, 20, 'black', bgcolor)
         self.hour = 9
         self.tick = False # The clock is currently changing.
         self.start_time = 0

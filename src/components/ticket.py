@@ -3,30 +3,31 @@ import random
 import pygame as pg
 
 from paths import *
+from src.common import MENU, QUOTE_DATA
 from src.components.food import Food
-from src.components.text import QuoteSection, Text
 from src.components.generic import Generic
-from src.shared_data import MENU
-from src.shared_data import QUOTE_DATA
+from src.components.text import QuoteSection, Text
 from src.utils.utils import get_screen_rect
+
 
 class Ticket(pg.sprite.Sprite):
     """Manages QuoteSection and Food objects."""
+
     # First element(s) from top will be pushed down 30px.
     FIRST_OFFSET = 30
     # Offset for the rest of the elements displayed on the ticket.
-    SUBOFFSET = 10 
+    SUBOFFSET = 10
 
-    IMAGE_PATHS = {'ticket': IMAGE_DIR / 'ticket.png'}
+    IMAGE_PATHS = {"ticket": IMAGE_DIR / "ticket.png"}
 
     containers = None
     images = {}
 
     def __init__(self, dish_name):
         super().__init__(self.containers)
-        self.image = self.images['ticket']
+        self.image = self.images["ticket"]
         self.rect = self.image.get_rect()
-        
+
         # Quote split into 'n' chunks as QuoteSection objects.
         self.quote_sections = []
         # Face image of whoever the quote is attributed to.
