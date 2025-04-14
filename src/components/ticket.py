@@ -46,8 +46,7 @@ class Ticket(pg.sprite.Sprite):
         self._set_quote_data()
         # Position self and items.
         self._position_items()
-        
-        
+
     def update(self, *args, **kwargs):
         # Values will be True or False if quote is completed. Not None.
         if all(
@@ -55,7 +54,7 @@ class Ticket(pg.sprite.Sprite):
             for quote_sec in self.quote_sections
         ):
             self._finish()
-            
+
     def get_score(self):
         """Retuns count of how many food items were cooked correctly."""
         return sum(quote.is_final_correct for quote in self.quote_sections)
@@ -65,25 +64,25 @@ class Ticket(pg.sprite.Sprite):
         for this ticket."""
         # Get random quote from quote data.
         quote_data = random.choice(QUOTE_DATA)
-        # Extract data.        
-        self._set_author_image(quote_data['id'])
-        self.author = quote_data['author']
-        self.lastname = self.author.split(' ')[-1]
-        
+        # Extract data.
+        self._set_author_image(quote_data["id"])
+        self.author = quote_data["author"]
+        self.lastname = self.author.split(" ")[-1]
+
         # Generate QuoteSection objects.
-        quote = quote_data['quote']
+        quote = quote_data["quote"]
         # Fix any unwanted newlines.
-        quote = quote.replace('\n', ' ')
+        quote = quote.replace("\n", " ")
         # Split text into 3 roughly even chunks.
         quote_sections = self._split_quote(quote)
         # Create quote_section objects.
         self.quote_sections = [
-            QuoteSection(quote, 15, 'black') for quote in quote_sections
+            QuoteSection(quote, 15, "black") for quote in quote_sections
         ]
         # Now that we have the author, create the dishname Text object.
         # ie. 'Descartes Burger.'
         self.dish_name_text = Text(
-                ' '.join([self.lastname, self.dish_name]), 7, 'black'
+            " ".join([self.lastname, self.dish_name]), 7, "black"
         )
 
     def _get_ingredients(self) -> list[Food]:
@@ -98,11 +97,11 @@ class Ticket(pg.sprite.Sprite):
             ingredient.status.kill()
         self.author_image.kill()
         self.kill()
-    
+
     def _set_author_image(self, author_id) -> None:
         """Helper method to create the author's face image and position."""
         self.author_image = Generic(
-            (IMAGE_DIR / 'faces' / author_id).with_suffix('.jpg')
+            (IMAGE_DIR / "faces" / author_id).with_suffix(".jpg")
         )
         # Position the image relative to the ticket.
         self.author_image.rect.midright = self.rect.midleft
@@ -115,7 +114,7 @@ class Ticket(pg.sprite.Sprite):
         self.rect.midtop = get_screen_rect().midtop
         self.rect.move_ip(0, self.SUBOFFSET)
 
-        #Position ingredients.
+        # Position ingredients.
         previous_ingredient = None
         for ingredient in self.ingredients:
             # Position first ingredient.
@@ -144,7 +143,7 @@ class Ticket(pg.sprite.Sprite):
         for ingredient in self.ingredients:
             ingredient.kill()
             ingredient.appliance_hint.kill()
-        
+
     def draw(self):
         self.add(self.containers)
         self.dish_name_text.add(self.containers)
@@ -157,11 +156,10 @@ class Ticket(pg.sprite.Sprite):
         quote = quote.split()
         chunk_len = len(quote) // 3
 
-        first = ' '.join(quote[:chunk_len])
-        second = ' '.join(quote[chunk_len:2 * chunk_len])
-        third = ' '.join(quote[2 * chunk_len:])
+        first = " ".join(quote[:chunk_len])
+        second = " ".join(quote[chunk_len : 2 * chunk_len])
+        third = " ".join(quote[2 * chunk_len :])
 
         quotes = [first, second, third]
 
         return quotes
-    
