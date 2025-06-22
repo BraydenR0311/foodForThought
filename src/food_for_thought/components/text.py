@@ -1,9 +1,10 @@
-import string
+import random
+from typing import override
 
 import pygame as pg
 
 from .. import config
-from ..utils.utils import get_screen_rect
+from ..common import QUOTE_DATA
 
 
 class Text(pg.sprite.Sprite):
@@ -11,105 +12,77 @@ class Text(pg.sprite.Sprite):
 
     containers = None
 
-    def __init__(self, text, fontsize, color, bgcolor=None):
+    def __init__(self, content: str, fontsize, color, bgcolor=None) -> None:
         super().__init__(self.containers)
-        self.text = str(text)
-        self.font = pg.font.Font(config.DEFAULT_FONT, fontsize)
-        self.color = color
-        self.bgcolor = bgcolor
-        self.image = self.font.render(self.text, 1, self.color, self.bgcolor)
+        self._content = str(content)
+        self._font = pg.font.Font(config.DEFAULT_FONT, fontsize)
+        self._color = color
+        self._bgcolor = bgcolor
+
+        self.image = self._font.render(self._content, 1, self._color, self._bgcolor)
         self.rect = self.image.get_rect()
 
-
-class QuoteSection(Text):
-    """Extended Text class that handles user input and typing logic."""
-
-    containers = None
-
-    def __init__(self, text, fontsize, color, bgcolor=None):
-        super().__init__(text, fontsize, color, bgcolor)
-        # Initialize empty input. Will update with each keystroke.
-        self.user_input = Text("", fontsize, "green")
-        # Position the quote in the right place (centered and below kitchen.)
-        self.rect.center = get_screen_rect().center
-        self.rect = self.rect.move(0, get_screen_rect().height // 3)
-        # Put user input in the same place on the screen.
-        self.user_input.rect = self.rect
-        # Number of wrong inputs.
-        self.misses = 0
-        # Flag to prevent self.misses from going up 1 each frame.
-        self.is_wrong = False
-        # After typing is done, did user type it correctly?
-        self.is_final_correct = None
-
+    @override
     def update(self, *args, **kwargs):
-        # User mistypes and needs to backspace to go continue typing.
-        if not self.text.startswith(self.user_input.text) and not self.is_wrong:
-            self._make_wrong()
-        # User backspaces.
-        elif self.text.startswith(self.user_input.text) and self.is_wrong:
-            self._make_correction()
+        self.image = self._font.render(self._content, 1, self._color, self._bgcolor)
 
-        # User typed quote correctly.
-        if self.user_input.text == self.text:
-            self.finish_correctly()
-        # User messes up for a 3rd time.
-        elif self.misses >= 3:
-            self.finish_incorrectly()
+    def get_content(self) -> str:
+        return self._content
 
-        self._update_user_input()
+    def change_color(self, new_color: str) -> None:
+        self._color = new_color
 
-    # Needs pg.event.get() as events
-    def handle_input(self, events):
-        for event in events:
-            # User types something.
-            if event.type == pg.TEXTINPUT:
-                if (
-                    # Text is ascii.
-                    event.text
-                    in string.ascii_letters + string.digits + string.punctuation + " "
-                    and
-                    # Prevent typing more if already wrong.
-                    not self.is_wrong
-                ):
-                    # Add new character.
-                    self.user_input.text = self.user_input.text + event.text
-            elif (
-                # If user pressed backspace.
-                event.type == pg.KEYDOWN and event.key == pg.K_BACKSPACE
-            ):
-                # Remove a character.
-                self.user_input.text = self.user_input.text[:-1]
+    def add_char(self, char: str):
+        if not len(char) != 1:
+            raise ValueError("Char must be a string with length == 1.")
+        self._content += char
 
-    def get_final_result(self):
-        """True if quote section was correctly typed. False if not."""
-        return self.is_final_correct
+    def remove_char(self) -> None:
+        """Remove number of letters from the end"""
+        self._content = self._content[:-1]
 
-    def finish_correctly(self):
-        """Logic for user correctly typing quote."""
-        # Remove sprites from the screen and clean up.
-        self.user_input.kill()
-        self.kill()
-        self.is_final_correct = True
 
-    def finish_incorrectly(self):
-        """Logic for user incorrectly typing quote."""
-        self.user_input.kill()
-        self.kill()
+class Quote:
+    def __init__(self) -> None:
+        # TODO: Author image
+        # Get random quote data.
+        data = random.choice(QUOTE_DATA)
+        self._author = data["author"]
+        self._lastname = self._author.split(" ")[-1]
+        self._content = data["quote"].replace("\n", " ")
 
-    def _make_wrong(self):
-        """User messes up and types an incorrect character."""
-        self.is_wrong = True
-        self.user_input.color = "red"
-        self.misses += 1
+        self._quote_parts = [
+            QuotePart(part) for part in self._split_quote(self._content)
+        ]
 
-    def _make_correction(self):
-        """Correct user after backspacing."""
-        self.is_wrong = False
-        self.user_input.color = "green"
+    def get_content(self) -> str:
+        return self._content
 
-    def _update_user_input(self):
-        """Must be called to update the color and letters of input text"""
-        self.user_input.image = self.font.render(
-            self.user_input.text, 1, self.user_input.color
-        )
+    def get(self):
+        # If there are quote parts left...
+        if self._quote_parts:
+            return self._quote_parts.pop(0)
+        return None
+
+    @staticmethod
+    def _split_quote(quote):
+        """Helper method to split the quote into even chunks."""
+        quote = quote.split()
+        chunk_len = len(quote) // 3
+
+        first = " ".join(quote[:chunk_len])
+        second = " ".join(quote[chunk_len : 2 * chunk_len])
+        third = " ".join(quote[2 * chunk_len :])
+
+        quotes = [first, second, third]
+
+        return quotes
+
+
+class QuotePart:
+    def __init__(self, content: str):
+        super().__init__()
+        self._content = content
+
+    def get_content(self) -> str:
+        return self._content
