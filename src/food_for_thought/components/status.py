@@ -5,17 +5,22 @@ from .. import config
 
 class Status(pg.sprite.Sprite):
     IMAGE_PATHS = {
-        "check": config.IMAGE_DIR / "check.png",
-        "x": config.IMAGE_DIR / "x.png",
+        "check": config.TICKET_DIR / "check.png",
+        "x": config.TICKET_DIR / "x.png",
     }
 
     containers = None
     images = {}
 
-    def __init__(self, isCheck):
-        super().__init__(self.containers)
-        self.image = self.images["check"] if isCheck else self.images["x"]
+    def __init__(self):
+        super().__init__()
+        self.image = self.images["check"]
         self.rect = self.image.get_rect()
 
     def make_wrong(self):
+        self.add(self.containers)
         self.image = self.images["x"]
+
+    def make_correct(self):
+        self.add(self.containers)
+        self.image = self.images["check"]
