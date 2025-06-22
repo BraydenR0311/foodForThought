@@ -25,12 +25,14 @@ from .components.food import Food
 from .components.player import Player
 from .components.popup import Popup
 from .components.ticket import Ticket
+from .components.status import Status
 from .components.tile import Tile
 from .gamestates.statekey import StateKey
 from .managers.audiomanager import AudioManager
 from .managers.gamestatemanager import GameStateManager
 from .gamestates.mainmenu import MainMenu
 from .gamestates.level import Level
+from .gamestates.cook import Cook
 
 from .managers.visualmanager import VisualManager
 
@@ -41,7 +43,7 @@ visualmanager = VisualManager()
 
 visualmanager.load_screen()
 # Set images for each class.
-for sprite_class in (Food, Player, Tile, Popup, Button, Ticket):
+for sprite_class in (Food, Player, Tile, Popup, Button, Ticket, Status):
     visualmanager.set_sprite_images(sprite_class)
 
 audiomanager = AudioManager()
@@ -54,6 +56,7 @@ gamestates = [
         StateKey.MAIN_MENU,
     ),
     Level(StateKey.LEVEL),
+    Cook(StateKey.COOK),
 ]
 
 # Make sure gamestatemanager and gamestates are aware of each other.
@@ -62,15 +65,17 @@ for gamestate in gamestates:
 
 gamestatemanager.goto(StateKey.MAIN_MENU)
 
-
 while gamestatemanager.is_running():
     # Debugging.
     # print(gamemanager.clock)
+    events = pg.event.get()
 
-    for event in pg.event.get():
+    for event in events:
         if event.type == pg.QUIT:
             gamestatemanager.quit()
 
+    # Make sure current state has a copy of the current events.
+    gamestatemanager.send_data({"events": events})
     gamestatemanager.run()
 
 pg.quit()
