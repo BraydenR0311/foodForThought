@@ -1,5 +1,4 @@
-import time
-
+from typing import override
 
 from .. import config
 from .text import Text
@@ -12,15 +11,34 @@ class Timer(Text):
 
     containers = None
 
-    def __init__(self, text, fontsize, color, bgcolor=None):
-        super().__init__(text, fontsize, color, bgcolor)
-        self.length = text
-        self.rect.center = get_screen_rect().center
-        self.rect.move_ip(get_screen_rect().width // 3, 0)
-        self.start = int(time.time())
+    def __init__(
+        self,
+        duration: int,
+        current_tick: int,
+        fontsize: int,
+        color: str,
+        bgcolor=None,
+    ):
+        super().__init__(str(duration), fontsize, color, bgcolor)
+        self._duration = duration
+        self._start = current_tick
         # Location of wrongs relative to center of timer.
         self.wrong_locs = [(-50, 100), (0, 100)]
         self.wrongs = []
+
+        self.rect.center = get_screen_rect().center
+        self.rect.move_ip(get_screen_rect().width // 3, 0)
+
+        self._done = False
+
+    def is_done(self) -> bool:
+        return self._done
+
+    @override
+    def kill(self):
+        super().kill()
+        for wrong in self.wrongs:
+            wrong.kill()
 
     def add_wrong(self):
         """When the user messes up typing, add an X below timer."""
@@ -31,8 +49,10 @@ class Timer(Text):
 
         self.wrongs.append(wrong)
 
-    def update(self, *args, **kwargs):
-        now = int(time.time())
-        passed = now - self.start
-        self.text = str(self.length - passed)
-        self.image = self.font.render(self.text, 1, self.color, self.bgcolor)
+    @override
+    def update(self, elapsed: int, *args, **kwargs):
+        super().update()
+        passed = int(elapsed - self._start)
+        self._content = str(self._duration - passed)
+        if passed > self._duration and not self._done:
+            self._done = True
