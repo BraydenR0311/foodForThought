@@ -6,9 +6,9 @@ from .components.generic import Generic
 from .components.player import Player
 from .components.popup import Popup
 from .components.shiftclock import ShiftClock
-from .components.text import QuoteSection, Text
+from .components.text import QuotePart, Text
 from .components.ticket import Ticket
-from .components.tile import Appliance, Floor, Table
+from .components.tile import Appliance, Floor, Table, InteractTile
 from .components.timer import Timer
 
 pg.sprite.Group()
@@ -26,8 +26,10 @@ tickets = pg.sprite.Group()
 statuses = pg.sprite.Group()
 generics = pg.sprite.Group()
 tables = pg.sprite.Group()
+interact_tiles = pg.sprite.Group()
 
 # Assign sprite classes to certain groups.
+InteractTile.containers = interact_tiles, kitchen, all_sprites
 Appliance.containers = appliances, kitchen, all_sprites
 Button.containers = buttons, all_sprites
 Floor.containers = kitchen, all_sprites
@@ -35,9 +37,9 @@ Food.containers = foods, all_sprites
 Generic.containers = generics, all_sprites
 Player.containers = player_group, all_sprites
 Popup.containers = popups, all_sprites
-QuoteSection.containers = quotes, all_sprites
+QuotePart.containers = quotes, all_sprites
 ShiftClock.containers = texts, all_sprites
 Text.containers = texts, all_sprites
 Ticket.containers = tickets, all_sprites
 Timer.containers = texts, all_sprites
-Table.containers = appliances, tables, kitchen, all_sprites
+Table.containers = tables, kitchen, all_sprites
