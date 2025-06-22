@@ -2,12 +2,13 @@ import time
 
 import pygame as pg
 
+
 from .. import config
 from .ticket import Ticket
 from .tile import Table
+from .generic import Generic
 
 
-# TODO: change time to pg ticks
 class Player(pg.sprite.Sprite):
     IMAGE_PATHS = {
         "up_idle": config.IMAGE_DIR / "chef" / "up_idle.png",
@@ -22,6 +23,7 @@ class Player(pg.sprite.Sprite):
         "left_idle": config.IMAGE_DIR / "chef" / "left_idle.png",
         "left_walk_1": config.IMAGE_DIR / "chef" / "left_walk_1.png",
         "left_walk_2": config.IMAGE_DIR / "chef" / "left_walk_2.png",
+        "plate": config.IMAGE_DIR / "chef" / "plate.png",
     }
 
     images = {}
@@ -41,6 +43,8 @@ class Player(pg.sprite.Sprite):
         self.time = time.time()
         self.center = pg.math.Vector2(0, 0)
         self.ticket = None
+        self.plate = Generic(config.IMAGE_DIR / "chef" / "plate.png")
+        self.plate.rect.bottomleft = self.rect.topright
 
         self.animations = {
             "walk_up": [
@@ -72,14 +76,26 @@ class Player(pg.sprite.Sprite):
     def update(self, closest, keys, *args, **kwargs):
         # TODO: Move this to main game loop
         self.center = pg.math.Vector2(*self.rect.center)
+        if self.ticket is not None and self.ticket.is_done():
+            self.plate.add(self.plate.containers)
+        else:
+            self.plate.kill()
+
+    def interact(self) -> None:
+        pass
 
     def take_order(self, table: Table) -> None:
         """Receives order from a table if not already busy with another."""
+        if not table.has_order():
+            return
         if not self.ticket:
             self.ticket = Ticket(table.tell_order())
 
     def give_dish(self, table: Table):
         """Give the dish to the table."""
+        # TODO: IMPLEMENT THIS
+        if self.ticket.get_table() is not table:
+            return
         table.receive_dish()
         self.ticket.kill()
 
