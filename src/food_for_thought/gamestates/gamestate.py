@@ -1,23 +1,26 @@
 from abc import ABC, abstractmethod
+from ..managers.gamestatemanager import GameStateManager
+from ..managers.visualmanager import VisualManager
+from ..managers.audiomanager import AudioManager
 
 
 class GameState(ABC):
     def __init__(self, statekey):
-        self._gsmanager = None
-        self._visualmanager = None
-        self._audiomanager = None
+        self._gsmanager: None | GameStateManager = None
+        self._visualmanager: None | VisualManager = None
+        self._audiomanager: None | AudioManager = None
         self.data = {}
         self._statekey = statekey
         self._issetup = False
 
-    def set_gsmanager(self, gsmanager):
+    def set_gsmanager(self, gsmanager: GameStateManager):
         self._gsmanager = gsmanager
 
-    def set_audiomanager(self, audiomanager):
-        self._audiomanager = audiomanager
-
-    def set_visualmanager(self, visualmanager):
+    def set_visualmanager(self, visualmanager: VisualManager):
         self._visualmanager = visualmanager
+
+    def set_audiomanager(self, audiomanager: AudioManager):
+        self._audiomanager = audiomanager
 
     def get_statekey(self):
         return self._statekey
