@@ -6,15 +6,17 @@ screen = pg.display.set_mode((1280, 720))
 clock = pg.time.Clock()
 running = True
 
-class Menu(pg.sprite.Sprite):
 
+class Menu(pg.sprite.Sprite):
     containers = None
 
     def __init__(self):
         super().__init__(self.containers)
-        self.image = pg.Surface((20,20))
-        self.rect = pg.image.load
-        
+        self.image = pg.Surface((20, 20))
+        self.rect = self.image.get_rect()
+        self.image.fill("blue")
+
+
 menugroup = pg.sprite.Group()
 
 Menu.containers = menugroup
@@ -25,8 +27,8 @@ while running:
     for event in pg.event.get():
         if event.type == pg.QUIT:
             running = False
-    
-    screen.fill('white')
+
+    screen.fill("white")
 
     menugroup.draw(screen)
 
