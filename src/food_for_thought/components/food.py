@@ -1,8 +1,17 @@
+from enum import Enum, auto
+from typing import override
 import pygame as pg
 
 from .. import config
+from ..components.status import Status
+from ..components.generic import Generic
 from ..common import TILE_IMAGE_PATHS
-from .generic import Generic
+
+
+class FoodState(Enum):
+    UNFINISHED = auto()
+    COOKED = auto()
+    RUINED = auto()
 
 
 class Food(pg.sprite.Sprite):
@@ -15,14 +24,13 @@ class Food(pg.sprite.Sprite):
         "beef": config.FOOD_DIR / "beef.png",
         "shell": config.FOOD_DIR / "shell.png",
         "tomato": config.FOOD_DIR / "tomato.png",
-    } | TILE_IMAGE_PATHS  # Concatenate dictionaries
+    }
+    IMAGE_PATHS.update(TILE_IMAGE_PATHS)
 
     APPLIANCE_DICT = {
-        "burger": None,
         "cheese": "c",
         "patty": "o",
         "bun": "o",
-        "taco": None,
         "beef": "o",
         "tomato": "c",
         "shell": "o",
@@ -34,24 +42,41 @@ class Food(pg.sprite.Sprite):
     def __init__(self, kind):
         super().__init__(self.containers)
         # What ingredient/dish this is.
-        self.kind = kind
+        self._kind = kind
         # Sprite object: Green check if correct, red if incorrect.
-        self.status_sprite = None
-        # What appliance is this dish cooked on.
-        self.appliance = self.APPLIANCE_DICT[self.kind]
+        self._status = Status()
+        self._state = FoodState.UNFINISHED
+        # What appliance the ingredient is cooked on.
+        # Returns None if it doesn't have an appliance (ie. dishes).
+        self._appliance = self.APPLIANCE_DICT.get(self._kind)
         # Dishes don't have an appliance, only ingredients.
-        if self.appliance:
-            self.appliance_hint = Generic(self.IMAGE_PATHS[self.appliance])
+        if self._appliance is not None:
+            self.appliance_hint = Generic(self.IMAGE_PATHS[self._appliance])
             self.appliance_hint.image = pg.transform.scale_by(
                 self.appliance_hint.image, 0.25
             )
             self.appliance_hint.rect = self.appliance_hint.image.get_rect()
 
-        self.image = self.images[self.kind]
+        self.image = self.images[self._kind]
         self.rect = self.image.get_rect()
 
-    def finish_correctly(self):
-        self.status = Generic(config.IMAGE_DIR / "check.png")
+    @override
+    def kill(self) -> None:
+        super().kill()
+        self._status.kill()
+        if self.appliance_hint:
+            self._appliance_hint.kill()
 
-    def finish_incorrectly(self):
-        self.status = Generic(config.IMAGE_DIR / "x.png")
+    def get_kind(self) -> str:
+        return self._kind
+
+    def get_state(self) -> FoodState:
+        return self._state
+
+    def finish_cooked(self):
+        self._status.make_correct()
+        self._state = FoodState.COOKED
+
+    def finish_ruined(self):
+        self._status.make_wrong()
+        self._state = FoodState.RUINED
