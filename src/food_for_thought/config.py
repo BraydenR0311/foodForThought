@@ -8,6 +8,7 @@ IMAGE_DIR = ASSET_DIR / "images"
 FOOD_DIR = IMAGE_DIR / "food"
 TILE_DIR = IMAGE_DIR / "tiles"
 POPUP_DIR = IMAGE_DIR / "popups"
+TICKET_DIR = IMAGE_DIR / "ticket"
 
 AUDIO_DIR = ASSET_DIR / "audio"
 FONT_DIR = ASSET_DIR / "fonts"
