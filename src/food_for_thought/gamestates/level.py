@@ -1,8 +1,8 @@
 from typing import override
+
 import pygame as pg
 
 from .. import config
-
 from .. import groups
 from ..utils.utils import read_tilemap
 from .gamestate import GameState
@@ -11,7 +11,6 @@ from .statekey import StateKey
 from ..components.player import Player
 from ..components.tile import Floor, Appliance, Table
 from ..components.shiftclock import ShiftClock
-from ..managers.tablemanager import TableManager
 
 
 class Level(GameState):
@@ -23,7 +22,6 @@ class Level(GameState):
         self.kitchen_rect = read_tilemap(
             config.ASSET_DIR / "map.txt", Player, Floor, Appliance, Table
         )
-        self.tablemanager = TableManager(groups.tables)
         self.shiftclock = ShiftClock()
         self.pressing_e = False
         self.player = groups.player_group.sprite
@@ -81,31 +79,32 @@ class Level(GameState):
 
         # Only interact with the closest appliance.
         closest = min(
-            groups.appliances,
+            groups.interact_tiles,
             key=lambda appliance: player.get_distance_from(appliance),
         )
-        # Player is giving taking order or giving a dish to the table.
-        if (
-            # Within range of table.
-            player.rect.colliderect(closest.get_hitbox())
-            and
-            # Interaction key is pressed.
-            keys[pg.K_e]
-        ):
-            # Closest appliance is a table and is ready to order.
-            if closest in groups.tables and closest.order:
+
+        # Within range of appliance and interaction key pressed.
+        if player.rect.colliderect(closest.get_hitbox()) and keys[pg.K_e]:
+            # Closest is ready to order
+            if closest in groups.tables:
                 player.take_order(closest)
             # Closest appliance is a kitchen appliance.
             elif closest not in groups.tables:
                 # Player has already taken an order.
                 if player.ticket:
-                    # Get quote sections in order.
-                    quote = player.ticket.quote_sections[0]
-                    for ingr in player.ticket.ingredients:
-                        if closest.kind == ingr.APPLIANCE_DICT[ingr.kind]:
+                    for ingr in player.ticket.get_ingredients():
+                        if closest.kind == ingr.APPLIANCE_DICT[ingr.get_kind()]:
+                            # Pop a quote part from the quote.
+                            quote = player.ticket.quote.get()
                             to_cook = ingr
                             self._gsmanager.goto(
-                                StateKey.COOK, data={"to_cook": to_cook, "quote": quote}
+                                StateKey.COOK,
+                                data={
+                                    "ticket": player.ticket,
+                                    "to_cook": to_cook,
+                                    "quote": quote,
+                                    "shiftclock": self.shiftclock,
+                                },
                             )
 
         self._update(closest=closest)
@@ -120,10 +119,9 @@ class Level(GameState):
             keys=pg.key.get_pressed(),
         )
 
-        self.tablemanager.update(self.shiftclock.get_elapsed())
-
     @override
     def _draw(self):
+        self._visualmanager.draw_background()
         self._visualmanager.draw(
             groups.kitchen,
             groups.player_group,
