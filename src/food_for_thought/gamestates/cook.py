@@ -15,7 +15,6 @@ class Cook(GameState):
 
     @override
     def _setup(self):
-        self.events = self.data["events"]
         self.shiftclock = self.data["shiftclock"]
         self.quote = self.data["quote"]
         self.ticket = self.data["ticket"]
@@ -30,13 +29,16 @@ class Cook(GameState):
 
     @override
     def run(self):
+        events = self.data["events"]
         done = False
-        self.typeui.handle_input(self.events)
+        self.typeui.handle_input(events)
 
         if self.typeui.is_written():
             self.ingredient.finish_cooked()
             self._gsmanager.goto(StateKey.LEVEL, teardown=True)
-        elif self.typeui.get_misses() >= 3 or self.timer.is_done():
+        elif self.typeui.get_misses() >= 3 or self.typeui.times_up():
+            print(self.typeui.get_misses())
+            print(self.typeui.times_up())
             self.ingredient.finish_ruined()
             self._gsmanager.goto(StateKey.LEVEL, teardown=True)
 
@@ -46,24 +48,6 @@ class Cook(GameState):
         # else:
         #     pressing_e = False
 
-        # User mistyped, but less than 3 times.
-        if (
-            self.quote.num_misses() > len(self.timer.wrongs)
-            and self.quote.num_misses < 3
-        ):
-            # Add x mark below timer.
-            self.timer.add_wrong()
-
-        # If time runs out or user messes up 3 times.
-        if int(self.timer.text) == 0 or self.quote.num_misses() >= 3:
-            # Ingredient finished incorrectly.
-            self.ingredient.make_wrong()
-            done = True
-        else:
-            self.ingredient.make_correct()
-            self.ticket.increment_score()
-            done = True
-
         self._update()
         self._draw()
 
@@ -72,18 +56,20 @@ class Cook(GameState):
 
     @override
     def _update(self):
-        self.timer.update()
+        self.typeui.update(self.shiftclock.get_elapsed())
         self.shiftclock.update()
-        groups.quotes.update()
-        groups.tables.update()
+        groups.tables.update(self.shiftclock.get_elapsed())
 
     @override
     def _draw(self):
         self._visualmanager.draw_background()
         self._visualmanager.draw(
+            groups.kitchen,
+            groups.player_group,
             groups.tickets,
             groups.foods,
             groups.statuses,
+            groups.popups,
             groups.texts,
             groups.generics,
         )
