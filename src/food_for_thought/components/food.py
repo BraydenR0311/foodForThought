@@ -5,7 +5,7 @@ import pygame as pg
 from .. import config
 from ..components.status import Status
 from ..components.generic import Generic
-from ..common import TILE_IMAGE_PATHS
+from ..common import TILE_IMAGE_PATHS, APPLIANCE_DICT
 
 
 class FoodState(Enum):
@@ -27,15 +27,6 @@ class Food(pg.sprite.Sprite):
     }
     IMAGE_PATHS.update(TILE_IMAGE_PATHS)
 
-    APPLIANCE_DICT = {
-        "cheese": "c",
-        "patty": "o",
-        "bun": "o",
-        "beef": "o",
-        "tomato": "c",
-        "shell": "o",
-    }
-
     containers = None
     images = {}
 
@@ -48,7 +39,7 @@ class Food(pg.sprite.Sprite):
         self._state = FoodState.UNFINISHED
         # What appliance the ingredient is cooked on.
         # Returns None if it doesn't have an appliance (ie. dishes).
-        self._appliance = self.APPLIANCE_DICT.get(self._kind)
+        self._appliance = APPLIANCE_DICT.get(self._kind)
         # Dishes don't have an appliance, only ingredients.
         if self._appliance is not None:
             self.appliance_hint = Generic(self.IMAGE_PATHS[self._appliance])
