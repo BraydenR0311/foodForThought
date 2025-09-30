@@ -48,7 +48,7 @@ class Player(pg.sprite.Sprite):
         self.rect = self.image.get_rect(center=center)
         self.time = time.time()
         self.center = pg.math.Vector2(0, 0)
-        self.ticket = None
+        self._ticket = None
         self.plate = Generic(config.IMAGE_DIR / "chef" / "plate.png")
         self.plate.rect.bottomleft = self.rect.topright
 
@@ -82,28 +82,53 @@ class Player(pg.sprite.Sprite):
     def update(self, closest, keys, *args, **kwargs):
         # TODO: Move this to main game loop
         self.center = pg.math.Vector2(*self.rect.center)
-        if self.ticket is not None and self.ticket.is_done():
+
+        if (
+            self._ticket is not None
+            and self._ticket.is_done()
+            and not self.plate.alive()
+        ):
             self.plate.add(self.plate.containers)
         else:
-            self.plate.kill()
+            if self.plate.alive():
+                self.plate.kill()
 
-    def interact(self) -> None:
-        pass
+    def get_ticket(self) -> Ticket:
+        return self._ticket
 
-    def take_order(self, table: Table) -> None:
+    def in_range(self, sprite: _HasHitbox) -> bool:
+        return self.rect.colliderect(sprite.get_hitbox())
+
+    def interact_table(self, table: Table) -> None:
+        if table.has_order() and self._ticket is None:
+            self._take_order(table)
+        elif (
+            self._ticket is not None
+            and self._ticket.belongs_to(table)
+            and self._ticket.is_done()
+        ):
+            self._give_dish(table)
+
+    def interact_appliance(self, appliance: Appliance) -> None:
+        if not self._ticket:
+            return (None, None)
+        for ingr in self._ticket.get_unfinished():
+            if appliance.can_cook(ingr.get_kind()):
+                quote = self._ticket.quote.get()
+                return (ingr, quote)
+        return (None, None)
+
+    def _take_order(self, table: Table) -> None:
         """Receives order from a table if not already busy with another."""
-        if not table.has_order():
-            return
-        if not self.ticket:
-            self.ticket = Ticket(table.tell_order())
+        if self._ticket:
+            raise ValueError("Player should not have a ticket when this is called")
+        self._ticket = Ticket(table.tell_order())
 
-    def give_dish(self, table: Table):
+    def _give_dish(self, table: Table):
         """Give the dish to the table."""
-        # TODO: IMPLEMENT THIS
-        if self.ticket.get_table() is not table:
-            return
         table.receive_dish()
-        self.ticket.kill()
+        self._ticket.kill()
+        self._ticket = None
 
     def get_distance_from(self, other: pg.sprite.Sprite):
         """Uses pygame's Vector2 to calculate Euclidean distance."""
