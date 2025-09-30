@@ -3,7 +3,9 @@ from abc import ABC
 
 import pygame as pg
 
-from ..common import MENU, TILE_IMAGE_PATHS
+
+from ..common import MENU, TILE_IMAGE_PATHS, APPLIANCE_DICT
+from ..components.food import Food
 from .popup import Popup
 
 
@@ -59,6 +61,9 @@ class InteractTile(Tile):
 class Appliance(InteractTile):
     def __init__(self, kind: str, rect: pg.Rect):
         super().__init__(kind, rect)
+
+    def can_cook(self, kind: str) -> bool:
+        return self.kind == APPLIANCE_DICT[kind]
 
 
 class Table(InteractTile):
