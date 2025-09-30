@@ -55,13 +55,18 @@ class Quote:
             QuotePart(part) for part in self._split_quote(self._content)
         ]
 
+    def __len__(self):
+        return len(self._quote_parts)
+
     def get_content(self) -> str:
         return self._content
 
     def get(self):
         # If there are quote parts left...
         if self._quote_parts:
-            return self._quote_parts.pop(0)
+            print("Called!")
+            quote_part = self._quote_parts.pop(0)
+            return quote_part
         return None
 
     @staticmethod
