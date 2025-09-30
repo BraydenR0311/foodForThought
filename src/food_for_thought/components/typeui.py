@@ -13,6 +13,9 @@ class TypeUI:
         self._is_erring = False
         self._misses = 0
 
+    def times_up(self) -> bool:
+        return self._timer.is_done()
+
     def is_written(self) -> bool:
         self._text.get_content() == self._user_input.get_content()
 
@@ -25,6 +28,9 @@ class TypeUI:
         self._user_input.kill()
         self._text.kill()
         self._timer.kill()
+
+    def update(self, elapsed) -> None:
+        self._timer.update(elapsed)
 
     def handle_input(self, events: list[pg.Event]) -> None:
         """Handle input from list of events from pg.event.get()"""

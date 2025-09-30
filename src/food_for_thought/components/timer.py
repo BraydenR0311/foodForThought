@@ -52,7 +52,7 @@ class Timer(Text):
     @override
     def update(self, elapsed: int, *args, **kwargs):
         super().update()
-        passed = int(elapsed - self._start)
+        passed = int(elapsed - self._start) // 1000
         self._content = str(self._duration - passed)
         if passed > self._duration and not self._done:
             self._done = True
