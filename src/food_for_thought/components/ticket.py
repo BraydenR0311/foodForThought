@@ -5,6 +5,7 @@ import pygame as pg
 from .. import config
 from ..common import MENU
 from .food import Food, FoodState
+from .tile import Table
 from .text import Quote, Text
 from ..utils.utils import get_screen_rect
 
@@ -32,6 +33,8 @@ class Ticket(pg.sprite.Sprite):
         self.ingredients = self._set_ingredients()
         self.num_correct = 0
 
+        self._table = None
+
         self.image = self.images["ticket"]
         self.rect = self.image.get_rect()
 
@@ -41,18 +44,25 @@ class Ticket(pg.sprite.Sprite):
     def update(self, *args, **kwargs):
         pass
 
+    def belongs_to(self, table: Table) -> bool:
+        return table is self._table
+
     @property
     def quote(self) -> Quote:
         return self._quote
 
     def is_done(self) -> bool:
-        return bool(self.quote.get())
+        return bool(len(self.quote))
 
     def get_score(self) -> int:
         return sum(ingr.get_state() == FoodState.COOKED for ingr in self.ingredients)
 
-    def get_ingredients(self):
-        return self.ingredients
+    def get_unfinished(self):
+        return [
+            ingr
+            for ingr in self.ingredients
+            if ingr.get_state() == FoodState.UNFINISHED
+        ]
 
     def _set_ingredients(self) -> list[Food]:
         """Create Food objects based on the dish and its ingredients."""
