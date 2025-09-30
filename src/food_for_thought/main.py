@@ -26,17 +26,38 @@ from .components.player import Player
 from .components.popup import Popup
 from .components.ticket import Ticket
 from .components.status import Status
-from .components.tile import Tile
+from .components.generic import Generic
+from .components.timer import Timer
+from .components.shiftclock import ShiftClock
+from .components.text import Text
+from .components.tile import Tile, InteractTile, Appliance, Floor, Table
 from .gamestates.statekey import StateKey
 from .managers.audiomanager import AudioManager
 from .managers.gamestatemanager import GameStateManager
 from .gamestates.mainmenu import MainMenu
 from .gamestates.level import Level
 from .gamestates.cook import Cook
+from .groups import *
 
 from .managers.visualmanager import VisualManager
 
 pg.init()
+
+# Assign sprite classes to certain groups.
+InteractTile.containers = interact_tiles, kitchen, all_sprites
+Appliance.containers = appliances, interact_tiles, kitchen, all_sprites
+Table.containers = tables, interact_tiles, kitchen, all_sprites
+Button.containers = buttons, all_sprites
+Floor.containers = kitchen, all_sprites
+Food.containers = foods, all_sprites
+Generic.containers = generics, all_sprites
+Status.containers = statuses, all_sprites
+Player.containers = player_group, all_sprites
+Popup.containers = popups, all_sprites
+ShiftClock.containers = texts, all_sprites
+Text.containers = texts, all_sprites
+Ticket.containers = tickets, all_sprites
+Timer.containers = texts, all_sprites
 
 # Setup resource managers.
 visualmanager = VisualManager()
