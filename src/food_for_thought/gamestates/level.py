@@ -24,7 +24,7 @@ class Level(GameState):
         )
         self.shiftclock = ShiftClock()
         self.pressing_e = False
-        self.player = groups.player_group.sprite
+        self.player: Player = groups.player_group.sprite
 
     @override
     def enter(self):
@@ -36,6 +36,7 @@ class Level(GameState):
 
     @override
     def run(self):
+        events = self.data["events"]
         keys = pg.key.get_pressed()
         player = self.player
 
@@ -53,7 +54,7 @@ class Level(GameState):
             player.dy = player.speed
             player.animate(player.animations["walk_down"])
             player.rect.move_ip(0, player.dy)
-        hitlist = pg.sprite.spritecollide(player, groups.appliances, dokill=False)
+        hitlist = pg.sprite.spritecollide(player, groups.interact_tiles, dokill=False)
         for sprite in hitlist:
             if player.dy > 0:
                 player.rect.bottom = sprite.rect.top
@@ -67,7 +68,7 @@ class Level(GameState):
             player.dx = player.speed
             player.animate(player.animations["walk_right"])
             player.rect.move_ip(player.dx, 0)
-        hitlist = pg.sprite.spritecollide(player, groups.appliances, dokill=False)
+        hitlist = pg.sprite.spritecollide(player, groups.interact_tiles, dokill=False)
         for sprite in hitlist:
             if player.dx > 0:
                 player.rect.right = sprite.rect.left
@@ -80,32 +81,27 @@ class Level(GameState):
         # Only interact with the closest appliance.
         closest = min(
             groups.interact_tiles,
-            key=lambda appliance: player.get_distance_from(appliance),
+            key=lambda tile: player.get_distance_from(tile),
         )
 
+        to_cook = quote = None
         # Within range of appliance and interaction key pressed.
-        if player.rect.colliderect(closest.get_hitbox()) and keys[pg.K_e]:
-            # Closest is ready to order
+        if player.in_range(closest) and keys[pg.K_e]:
             if closest in groups.tables:
-                player.take_order(closest)
-            # Closest appliance is a kitchen appliance.
-            elif closest not in groups.tables:
-                # Player has already taken an order.
-                if player.ticket:
-                    for ingr in player.ticket.get_ingredients():
-                        if closest.kind == ingr.APPLIANCE_DICT[ingr.get_kind()]:
-                            # Pop a quote part from the quote.
-                            quote = player.ticket.quote.get()
-                            to_cook = ingr
-                            self._gsmanager.goto(
-                                StateKey.COOK,
-                                data={
-                                    "ticket": player.ticket,
-                                    "to_cook": to_cook,
-                                    "quote": quote,
-                                    "shiftclock": self.shiftclock,
-                                },
-                            )
+                player.interact_table(closest)
+            elif closest in groups.appliances:
+                to_cook, quote = player.interact_appliance(closest)
+
+        if to_cook is not None and quote is not None:
+            self._gsmanager.goto(
+                StateKey.COOK,
+                data={
+                    "ticket": player.get_ticket(),
+                    "to_cook": to_cook,
+                    "quote": quote,
+                    "shiftclock": self.shiftclock,
+                },
+            )
 
         self._update(closest=closest)
         self._draw()
