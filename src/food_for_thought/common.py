@@ -12,4 +12,13 @@ TILE_IMAGE_PATHS = {
     "t": config.TILE_DIR / "table.png",
 }
 
+APPLIANCE_DICT = {
+    "cheese": "c",
+    "patty": "o",
+    "bun": "o",
+    "beef": "o",
+    "tomato": "c",
+    "shell": "o",
+}
+
 MENU = {"burger": ["bun", "patty", "cheese"], "taco": ["shell", "beef", "tomato"]}
