@@ -129,6 +129,7 @@ class Level(GameState):
             groups.texts,
         )
 
+    @override
     def _teardown(self):
         for sprite in groups.all_sprites:
             sprite.kill()
