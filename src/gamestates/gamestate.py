@@ -40,3 +40,6 @@ class GameState(ABC):
 
     def run(self):
         pass
+
+    def update(self):
+        pass
