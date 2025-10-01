@@ -72,6 +72,7 @@ audiomanager = AudioManager()
 # Setup gamestate elements.
 gamestatemanager = GameStateManager()
 
+# Instantiate gamestates with their keys.
 gamestates = [
     MainMenu(
         StateKey.MAIN_MENU,
@@ -84,6 +85,7 @@ gamestates = [
 for gamestate in gamestates:
     gamestatemanager.register_gamestate(gamestate, audiomanager, visualmanager)
 
+# Start at main menu.
 gamestatemanager.goto(StateKey.MAIN_MENU)
 
 while gamestatemanager.is_running():
