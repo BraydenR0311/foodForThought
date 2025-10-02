@@ -64,7 +64,6 @@ class Quote:
     def get(self):
         # If there are quote parts left...
         if self._quote_parts:
-            print("Called!")
             quote_part = self._quote_parts.pop(0)
             return quote_part
         return None
