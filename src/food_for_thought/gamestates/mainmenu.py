@@ -5,15 +5,22 @@ from .. import groups
 from ..components.button import Button
 from .gamestate import GameState
 from .statekey import StateKey
+from ..managers.visualmanager import VisualManager
+from ..managers.audiomanager import AudioManager
+from ..managers.gamestatemanager import GameStateManager
+
+gamestate_manager = GameStateManager()
+audio_manager = AudioManager()
+visual_manager = VisualManager()
 
 
 class MainMenu(GameState):
-    def __init__(self, statekey):
-        super().__init__(statekey)
+    def __init__(self):
+        super().__init__(StateKey.MAIN_MENU)
 
     def _setup(self):
-        self.play_button = Button("play", self._visualmanager.get_screen_rect().center)
-        self.quit_button = Button("quit", self._visualmanager.get_screen_rect().center)
+        self.play_button = Button("play", visual_manager.get_screen_rect().center)
+        self.quit_button = Button("quit", visual_manager.get_screen_rect().center)
 
         self.play_button.rect.move_ip(0, -100)
         self.quit_button.rect.move_ip(0, 100)
@@ -22,12 +29,12 @@ class MainMenu(GameState):
         self._update()
         self._draw()
 
-        self._audiomanager.play_music()
+        audio_manager.play_music()
 
         if self.play_button.activated:
-            self._gsmanager.goto(StateKey.LEVEL, teardown=True)
+            gamestate_manager.goto(StateKey.LEVEL, teardown=True)
         elif self.quit_button.activated:
-            self._gsmanager.quit()
+            gamestate_manager.quit()
 
     def _update(self):
         mouse_pos = pg.mouse.get_pos()
@@ -35,8 +42,8 @@ class MainMenu(GameState):
         groups.buttons.update(mouse_pos, click)
 
     def _draw(self):
-        self._visualmanager.draw_background()
-        groups.buttons.draw(self._visualmanager.get_screen())
+        visual_manager.draw_background()
+        groups.buttons.draw(visual_manager.get_screen())
 
     def _teardown(self):
         for sprite in groups.all_sprites:
