@@ -100,36 +100,56 @@ class Player(pg.sprite.Sprite):
         if self.plate.alive():
             self.plate.kill()
 
-    def get_ticket(self) -> Ticket:
+    def interact(self, interact_tile) -> None:
+        """Interact with an interactable tile."""
+        interact_tile.interact(self)
+
+    def take_order(self, dish_name: str):
+        """Instantiate ticket with a given dish name string. Called by table."""
+        # Player already has order
+        if self.has_order():
+            return
+        self._ticket = Ticket(dish_name)
+        self._hold_plate()
+
+    def give_dish(self):
+        """Give dish to table. Called by table."""
+        self._ticket.kill()
+        self._ticket = None
+        self._unhold_plate()
+
+    def has_order(self) -> bool:
+        return self._ticket is not None
+
+    def get_ticket(self) -> Ticket | None:
         return self._ticket
 
-    def in_range(self, sprite: _HasHitbox) -> bool:
-        return self.rect.colliderect(sprite.get_hitbox())
+    def get_order_name(self) -> str | None:
+        if not self.has_order():
+            return
+        return self.get_ticket().dish_name
 
-    def interact_table(self, table: Table) -> None:
-        if table.has_order() and self._ticket is None:
-            self._take_order(table)
-        elif (
-            self._ticket is not None
-            and self._ticket.belongs_to(table)
-            and self._ticket.is_done()
-        ):
-            self._give_dish(table)
+    def in_range(self, interact_tile: InteractTile) -> bool:
+        return self.rect.colliderect(interact_tile.get_interaction_rect())
 
-    def interact_appliance(self, appliance: Appliance) -> None:
-        if not self._ticket:
-            return (None, None)
-        for ingr in self._ticket.get_unfinished():
-            if appliance.can_cook(ingr.get_kind()):
-                quote = self._ticket.quote.get()
-                return (ingr, quote)
-        return (None, None)
+    # def interact_table(self, table: Table) -> None:
+    #     if table.has_order() and self._ticket is None:
+    #         self._take_order(table)
+    #     elif (
+    #         self._ticket is not None
+    #         and self._ticket.belongs_to(table)
+    #         and self._ticket.is_done()
+    #     ):
+    #         self._give_dish(table)
 
-    def _take_order(self, table: Table) -> None:
-        """Receives order from a table if not already busy with another."""
-        if self._ticket:
-            raise ValueError("Player should not have a ticket when this is called")
-        self._ticket = Ticket(table.tell_order())
+    # def interact_appliance(self, appliance: Appliance) -> None:
+    #     if not self._ticket:
+    #         return (None, None)
+    #     for ingr in self._ticket.get_unfinished():
+    #         if appliance.can_cook(ingr.get_kind()):
+    #             quote = self._ticket.quote.get()
+    #             return (ingr, quote)
+    #     return (None, None)
 
     def _give_dish(self, table: Table):
         """Give the dish to the table."""
