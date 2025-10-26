@@ -4,7 +4,18 @@ from .. import config
 
 
 class VisualManager:
+    _instance = None
+    _initialized = False
+
+    def __new__(cls):
+        if not cls._instance:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
     def __init__(self):
+        if VisualManager._initialized:
+            return
+        VisualManager._initialized = True
         self._screen = self.load_screen()
         self.background_img = pg.image.load(
             config.IMAGE_DIR / "background.png"
