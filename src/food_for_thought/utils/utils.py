@@ -20,7 +20,13 @@ def get_screen_rect():
     return pg.display.get_surface().get_rect()
 
 
-def read_tilemap(path, player_cls, floor_cls, appliance_cls, table_cls) -> pg.Rect:
+def read_tilemap(
+    path,
+    player_cls,
+    floor_cls,
+    appliance_cls,
+    table_cls,
+) -> pg.Rect:
     with open(path, "r", encoding="utf-8") as infile:
         tilemap = infile.read().splitlines()
 
