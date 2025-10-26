@@ -52,7 +52,7 @@ class Ticket(pg.sprite.Sprite):
         return self._quote
 
     def is_done(self) -> bool:
-        return bool(len(self.quote))
+        return not bool(len(self.quote))
 
     def get_score(self) -> int:
         return sum(ingr.get_state() == FoodState.COOKED for ingr in self.ingredients)
