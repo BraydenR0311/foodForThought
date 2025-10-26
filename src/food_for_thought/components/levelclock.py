@@ -4,7 +4,7 @@ from .text import Text
 from ..utils.utils import get_screen_rect
 
 
-class ShiftClock(Text):
+class LevelClock(Text):
     """Manages 9 to 5 shift. Records time and updates on-screen clock."""
 
     SECS_IN_HOUR = 15

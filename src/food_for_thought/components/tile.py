@@ -6,7 +6,13 @@ import pygame as pg
 
 from ..common import MENU, TILE_IMAGE_PATHS, APPLIANCE_DICT
 from ..components.food import Food
+from ..managers.gamestatemanager import GameStateManager
+from ..managers.audiomanager import AudioManager
+from ..gamestates.statekey import StateKey
 from .popup import Popup
+
+gamestate_manager = GameStateManager()
+audio_manager = AudioManager()
 
 
 # Only inherited from.
@@ -33,37 +39,50 @@ class Floor(Tile):
 
 
 class InteractTile(Tile):
-    def __init__(self, kind: str, rect: pg.Rect):
+    def __init__(
+        self,
+        kind: str,
+        rect: pg.Rect,
+    ):
         super().__init__(kind, rect)
         # Define the allowable area for player interaction.
-        self.zone = self.rect.inflate(70, 70)
-        self.popup = Popup(self.rect.center)
+        self._interaction_rect = self.rect.inflate(70, 70)
+        self.popup = None
         self.center = pg.math.Vector2(*self.rect.center)
 
-    def update(self, player_rect, closest, *args, **kwargs):
-        # Show interaction if player is closest and within range.
-        if self is closest and self.zone.colliderect(player_rect):
-            self._show_interact_popup()
-        else:
-            self._unshow_interact_popup()
+    def update(self, *args, **kwargs): ...
 
-    def get_hitbox(self) -> pg.Rect:
+    def interact(self, player): ...
+
+    def get_interaction_rect(self) -> pg.Rect:
         """Return the area where the user can interact."""
-        return self.zone
+        return self._interaction_rect
 
-    def _show_interact_popup(self):
-        self.popup.add(Popup.containers)
+    def show_interaction_popup(self):
+        self.popup = Popup(self.rect.center)
 
-    def _unshow_interact_popup(self):
-        self.popup.kill()
+    def unshow_interaction_popup(self):
+        if self.popup is not None:
+            self.popup.kill()
 
 
 class Appliance(InteractTile):
-    def __init__(self, kind: str, rect: pg.Rect):
+    def __init__(
+        self,
+        kind: str,
+        rect: pg.Rect,
+    ):
         super().__init__(kind, rect)
 
     def can_cook(self, kind: str) -> bool:
         return self.kind == APPLIANCE_DICT[kind]
+
+    def interact(self, player):
+        if not player.has_order():
+            return
+        for ingredient in player.get_ticket().get_unfinished():
+            if self.can_cook(ingredient):
+                gamestate_manager.goto(StateKey.COOK, {""})
 
 
 class Table(InteractTile):
@@ -83,14 +102,18 @@ class Table(InteractTile):
     _deciding_duration = 0
     _deciding_start = 0
 
-    def __init__(self, kind, rect):
+    def __init__(
+        self,
+        kind,
+        rect,
+    ):
         super().__init__(kind, rect)
         # Needed to access instances.
         Table._tables.append(self)
-        # A popup that says 'waiter!'.
-        self._popup = Popup(self.rect.center)
+
         # A randomly chosen order. None if haven't ordered yet or just received food.
         self._order = None
+        self._is_waiting = False
         self._order_start = 0
 
     def update(self, elapsed, *args, **kwargs):
@@ -107,14 +130,28 @@ class Table(InteractTile):
             # Get the right table and make it decide.
             Table._deciding_table._decide_order()
 
-    def has_order(self) -> bool:
+    def interact(self, player):
+        """When player interacts, if order is ready, give player the
+        order name.
+        """
+        # No order decided yet.
+        if not self._has_order():
+            return
+        if not self._is_waiting:
+            self._is_waiting = True
+            player.take_order(self._order)
+            return
+        if player.ticket.is_done() and self._order == player.ticket.dish_name:
+            player.give_dish()
+
+    def _has_order(self) -> bool:
         """An order is available."""
         return self._order is not None
 
     def tell_order(self) -> str:
         """Return the randomly decided dish. Unshow popup."""
         # There is no longer a table actively deciding.
-        self._popup.kill()
+        self.unshow_interaction_popup()
         # Will return 'falsy' if order is not decided.
         return self._order
 
@@ -148,7 +185,7 @@ class Table(InteractTile):
         # Mark point in time when order took place.
         self._order_start = self._elapsed
         # Show popup.
-        self._popup.add(Popup.containers)
+        self.show_interaction_popup()
 
         Table._num_waiting += 1
 

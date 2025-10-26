@@ -54,10 +54,10 @@ Generic.containers = generics, all_sprites
 Status.containers = statuses, all_sprites
 Player.containers = player_group, all_sprites
 Popup.containers = popups, all_sprites
-ShiftClock.containers = texts, all_sprites
+LevelClock.containers = texts, all_sprites
 Text.containers = texts, all_sprites
 Ticket.containers = tickets, all_sprites
-Timer.containers = texts, all_sprites
+TypeTimer.containers = texts, all_sprites
 
 # Setup resource managers.
 visualmanager = VisualManager()
