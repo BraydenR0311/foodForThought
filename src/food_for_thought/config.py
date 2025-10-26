@@ -11,6 +11,8 @@ POPUP_DIR = IMAGE_DIR / "popups"
 TICKET_DIR = IMAGE_DIR / "ticket"
 
 AUDIO_DIR = ASSET_DIR / "audio"
+MUSIC_DIR = AUDIO_DIR / "music"
+SOUND_DIR = AUDIO_DIR / "sounds"
 FONT_DIR = ASSET_DIR / "fonts"
 
 # Screen dimensions.
