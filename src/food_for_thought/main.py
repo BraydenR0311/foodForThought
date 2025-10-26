@@ -68,41 +68,32 @@ visualmanager.load_screen()
 for sprite_class in (Food, Player, Tile, Popup, Button, Ticket, Status):
     visualmanager.set_sprite_images(sprite_class)
 
-audiomanager = AudioManager()
+audio_manager = AudioManager()
 
 # Setup gamestate elements.
-gamestatemanager = GameStateManager()
+gamestate_manager = GameStateManager()
 
 # Instantiate gamestates with their keys.
-gamestates = [
-    MainMenu(
-        StateKey.MAIN_MENU,
-    ),
-    Level(StateKey.LEVEL),
-    Cook(StateKey.COOK),
-]
+gamestates = (
+    MainMenu(),
+    Level(),
+    Cook(),
+)
 
-# Make sure gamestatemanager and gamestates are aware of each other.
-for gamestate in gamestates:
-    gamestatemanager.register_gamestate(gamestate, audiomanager, visualmanager)
+# Register Gamestate.
+gamestate_manager.register_gamestate(*gamestates)
 
 # Start at main menu.
-gamestatemanager.goto(StateKey.MAIN_MENU)
+gamestate_manager.goto(StateKey.MAIN_MENU)
 
-while gamestatemanager.is_running():
+while gamestate_manager.is_running():
     # Debugging.
     # print(gamemanager.clock)
-    events = pg.event.get()
 
-    for event in events:
-        if event.type == pg.QUIT:
-            gamestatemanager.quit()
-
-    # Make sure current state has a copy of the current events.
-    gamestatemanager.send_data({"events": events})
-    gamestatemanager.run()
+    gamestate_manager.run()
 
 pg.quit()
+sys.exit()
 
 # # Game starts in the main menu.
 # if gamestatemanager.state == State.MAIN_MENU:
