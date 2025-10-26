@@ -10,33 +10,50 @@ from .statekey import StateKey
 
 from ..components.player import Player
 from ..components.tile import Floor, Appliance, Table
-from ..components.shiftclock import ShiftClock
+from ..components.levelclock import LevelClock
+from ..managers.gamestatemanager import GameStateManager
+from ..managers.visualmanager import VisualManager
+from ..managers.audiomanager import AudioManager
+
+gamestate_manager = GameStateManager()
+visual_manager = VisualManager()
+audio_manager = AudioManager()
 
 
 class Level(GameState):
-    def __init__(self, statekey):
-        super().__init__(statekey)
+    def __init__(self):
+        super().__init__(StateKey.LEVEL)
 
     @override
     def _setup(self):
         self.kitchen_rect = read_tilemap(
-            config.ASSET_DIR / "map.txt", Player, Floor, Appliance, Table
+            config.ASSET_DIR / "map.txt",
+            Player,
+            Floor,
+            Appliance,
+            Table,
         )
-        self.shiftclock = ShiftClock()
-        self.pressing_e = False
+        self.level_clock = LevelClock()
         self.player: Player = groups.player_group.sprite
 
     @override
-    def enter(self):
-        self.shiftclock.start()
+    def _enter(self):
+        self.level_clock.start()
 
     @override
-    def exit(self):
-        self.shiftclock.pause()
+    def _exit(self):
+        self.level_clock.pause()
 
     @override
     def run(self):
         events = self.data["events"]
+        dt = self.data["dt"]
+
+        e_press = False
+        for event in events:
+            if event.type == pg.KEYDOWN and event.key == pg.K_e:
+                e_press = True
+
         keys = pg.key.get_pressed()
         player = self.player
 
@@ -45,80 +62,70 @@ class Level(GameState):
         down = keys[pg.K_s]
         left = keys[pg.K_a]
         right = keys[pg.K_d]
+        sprint = keys[pg.K_LSHIFT]
 
+        speed = player.SPEED
+        if sprint:
+            speed *= player.SPRINT_MULTIPLIER
         if up:
-            player.dy = -player.speed
+            player.dy = -speed * dt
             player.animate(player.animations["walk_up"])
             player.rect.move_ip(0, player.dy)
         if down:
-            player.dy = player.speed
+            player.dy = speed * dt
             player.animate(player.animations["walk_down"])
             player.rect.move_ip(0, player.dy)
-        hitlist = pg.sprite.spritecollide(player, groups.interact_tiles, dokill=False)
-        for sprite in hitlist:
+        collided_tiles = pg.sprite.spritecollide(
+            player, groups.interact_tiles, dokill=False
+        )
+        for tile in collided_tiles:
             if player.dy > 0:
-                player.rect.bottom = sprite.rect.top
+                player.rect.bottom = tile.rect.top
             elif player.dy < 0:
-                player.rect.top = sprite.rect.bottom
+                player.rect.top = tile.rect.bottom
         if left:
-            player.dx = -player.speed
+            player.dx = -speed * dt
             player.animate(player.animations["walk_left"])
             player.rect.move_ip(player.dx, 0)
         if right:
-            player.dx = player.speed
+            player.dx = speed * dt
             player.animate(player.animations["walk_right"])
             player.rect.move_ip(player.dx, 0)
-        hitlist = pg.sprite.spritecollide(player, groups.interact_tiles, dokill=False)
-        for sprite in hitlist:
+        collided_tiles = pg.sprite.spritecollide(
+            player, groups.interact_tiles, dokill=False
+        )
+        for tile in collided_tiles:
             if player.dx > 0:
-                player.rect.right = sprite.rect.left
+                player.rect.right = tile.rect.left
             elif player.dx < 0:
-                player.rect.left = sprite.rect.right
+                player.rect.left = tile.rect.right
 
         # Keep chef in the kitchen
         player.rect.clamp_ip(self.kitchen_rect)
 
         # Only interact with the closest appliance.
-        closest = min(
+        closest_interact_tile = min(
             groups.interact_tiles,
             key=lambda tile: player.get_distance_from(tile),
         )
 
-        to_cook = quote = None
         # Within range of appliance and interaction key pressed.
-        if player.in_range(closest) and keys[pg.K_e]:
-            if closest in groups.tables:
-                player.interact_table(closest)
-            elif closest in groups.appliances:
-                to_cook, quote = player.interact_appliance(closest)
+        if player.in_range(closest_interact_tile) and e_press:
+            player.interact(closest_interact_tile)
 
-        if to_cook is not None and quote is not None:
-            self._gsmanager.goto(
-                StateKey.COOK,
-                data={
-                    "ticket": player.get_ticket(),
-                    "to_cook": to_cook,
-                    "quote": quote,
-                    "shiftclock": self.shiftclock,
-                },
-            )
-
-        self._update(closest=closest)
+        self._update()
         self._draw()
 
     @override
-    def _update(self, closest):
+    def _update(self):
         groups.all_sprites.update(
-            closest=closest,
-            elapsed=self.shiftclock.get_elapsed(),
-            player_rect=self.player.rect,
-            keys=pg.key.get_pressed(),
+            elapsed=self.level_clock.get_elapsed(), dt=self.data["dt"]
         )
 
     @override
     def _draw(self):
-        self._visualmanager.draw_background()
-        self._visualmanager.draw(
+        visual_manager.draw_background()
+        visual_manager.draw(
             groups.kitchen,
             groups.player_group,
             groups.tickets,
