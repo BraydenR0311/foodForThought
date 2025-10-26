@@ -19,20 +19,23 @@ class Text(pg.sprite.Sprite):
         self._color = color
         self._bgcolor = bgcolor
 
-        self.image = self._font.render(self._content, 1, self._color, self._bgcolor)
+        self.image = self._font.render(self._content, True, self._color, self._bgcolor)
         self.rect = self.image.get_rect()
 
     @override
     def update(self, *args, **kwargs):
-        self.image = self._font.render(self._content, 1, self._color, self._bgcolor)
+        self.image = self._font.render(self._content, True, self._color, self._bgcolor)
 
     def get_content(self) -> str:
+        """Return string content."""
         return self._content
 
     def change_color(self, new_color: str) -> None:
+        """Update color in place."""
         self._color = new_color
 
     def add_char(self, char: str):
+        """Add a single character to the end of the string."""
         if not len(char) != 1:
             raise ValueError("Char must be a string with length == 1.")
         self._content += char
@@ -43,6 +46,8 @@ class Text(pg.sprite.Sprite):
 
 
 class Quote:
+    """Contains a quote separated by quote parts."""
+
     def __init__(self) -> None:
         # TODO: Author image
         # Get random quote data.
@@ -59,9 +64,11 @@ class Quote:
         return len(self._quote_parts)
 
     def get_content(self) -> str:
+        """Returns the entire quote, regardless if any have been popped."""
         return self._content
 
-    def get(self):
+    def pop(self):
+        """Pop the first quote part. Returns none if empty."""
         # If there are quote parts left...
         if self._quote_parts:
             quote_part = self._quote_parts.pop(0)
