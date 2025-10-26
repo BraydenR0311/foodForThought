@@ -1,6 +1,9 @@
 import pygame as pg
 
 from .. import config
+from ..managers.audiomanager import AudioManager
+
+audio_manager = AudioManager()
 
 
 class Button(pg.sprite.Sprite):
@@ -22,7 +25,10 @@ class Button(pg.sprite.Sprite):
         self.armed = False
         self.activated = False
 
-    def update(self, mouse_pos, click, *args, **kwargs):
+    def update(self, *args, **kwargs):
+        mouse_pos = pg.mouse.get_pos()
+        click, _, _ = pg.mouse.get_pressed()
+
         # If previously activated, deactivate.
         if self.activated:
             self.activated = False
@@ -32,6 +38,9 @@ class Button(pg.sprite.Sprite):
 
         # Nothing done to self.
         if not armed and not click:
+            if self.clicked:
+                audio_manager.play_sound("click_up")
+
             self.armed = False
             self.unarm()
             self.clicked = False
@@ -50,6 +59,7 @@ class Button(pg.sprite.Sprite):
         if armed and not click and self.clicked:
             self.clicked = False
             self.activated = True
+            audio_manager.play_sound("click_up")
 
     def arm(self):
         self.image = pg.transform.hsl(self.image, lightness=-0.2)
@@ -59,3 +69,4 @@ class Button(pg.sprite.Sprite):
 
     def click(self):
         self.image = pg.transform.hsl(self.image, lightness=-0.3)
+        audio_manager.play_sound("click_down")
