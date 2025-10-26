@@ -11,10 +11,6 @@ from .generic import Generic
 from .. import groups
 
 
-class _HasHitbox(Protocol):
-    def get_hitbox(self) -> pg.Rect: ...
-
-
 class Player(pg.sprite.Sprite):
     IMAGE_PATHS = {
         "up_idle": config.IMAGE_DIR / "chef" / "up_idle.png",
