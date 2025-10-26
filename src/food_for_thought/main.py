@@ -27,8 +27,8 @@ from .components.popup import Popup
 from .components.ticket import Ticket
 from .components.status import Status
 from .components.generic import Generic
-from .components.timer import Timer
-from .components.shiftclock import ShiftClock
+from .components.type_timer import TypeTimer
+from .components.levelclock import LevelClock
 from .components.text import Text
 from .components.tile import Tile, InteractTile, Appliance, Floor, Table
 from .gamestates.statekey import StateKey
