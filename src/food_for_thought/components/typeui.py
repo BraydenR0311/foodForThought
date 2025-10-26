@@ -1,23 +1,27 @@
 import pygame as pg
-from ..components.timer import Timer
+from .type_timer import TypeTimer
 from ..components.text import Text
 
 
 class TypeUI:
     def __init__(self, quote_part: str, current_tick: int, fontsize: int) -> None:
         self._text = Text(quote_part, fontsize, "black")
-        self._timer = Timer(
+        # Time is based on number of words and then some.
+        self._timer = TypeTimer(
             len(self._text.get_content().split()) + 3, current_tick, 15, "black"
         )
+        # User's typed text that will mask original text.
         self._user_input = Text("", fontsize, "green")
         self._is_erring = False
         self._misses = 0
 
-    def times_up(self) -> bool:
+    def is_time_up(self) -> bool:
+        """Timer is done."""
         return self._timer.is_done()
 
     def is_written(self) -> bool:
-        self._text.get_content() == self._user_input.get_content()
+        """User has successfully written text."""
+        return self._text.get_content() == self._user_input.get_content()
 
     def get_misses(self) -> int:
         """Return number of misses"""
@@ -30,6 +34,7 @@ class TypeUI:
         self._timer.kill()
 
     def update(self, elapsed) -> None:
+        """Need elapsed time from an object that manages level time."""
         self._timer.update(elapsed)
 
     def handle_input(self, events: list[pg.Event]) -> None:
