@@ -38,6 +38,7 @@ from .gamestates.mainmenu import MainMenu
 from .gamestates.level import Level
 from .gamestates.cook import Cook
 from .groups import *
+import sys
 
 from .managers.visualmanager import VisualManager
 
