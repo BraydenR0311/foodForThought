@@ -59,13 +59,13 @@ class TypeUI:
         if not self._text.get_content().startswith(self._user_input.get_content()):
             # If previously not erring...
             if not self._is_erring:
+                self._is_erring = True
                 self._misses += 1
                 self._text.change_color("red")
                 # Display red check under timer.
                 self._timer.add_wrong()
-            self._is_erring = True
         else:
             # If previously erring...
             if self._is_erring:
+                self._is_erring = False
                 self._text.change_color("green")
-            self._is_erring = False
