@@ -33,11 +33,12 @@ class Player(pg.sprite.Sprite):
     containers = None
 
     ANIM_SPEED = 0.2
+    SPEED = 150
+    SPRINT_MULTIPLIER = 2
 
     def __init__(self, center):
         super().__init__(self.containers)
         self.index = 0
-        self.speed = 2
         self.dx = 0
         self.dy = 0
         self.image = self.images["up_idle"]
@@ -46,7 +47,7 @@ class Player(pg.sprite.Sprite):
         self.center = pg.math.Vector2(0, 0)
         self._ticket = None
         self.plate = Generic(config.IMAGE_DIR / "chef" / "plate.png")
-        self.plate.rect.bottomleft = self.rect.topright
+        self.plate.kill()
 
         self.animations = {
             "walk_up": [
@@ -75,19 +76,29 @@ class Player(pg.sprite.Sprite):
             ],
         }
 
-    def update(self, closest, keys, *args, **kwargs):
-        # TODO: Move this to main game loop
+    def update(self, dt, *args, **kwargs):
         self.center = pg.math.Vector2(*self.rect.center)
 
-        if (
-            self._ticket is not None
-            and self._ticket.is_done()
-            and not self.plate.alive()
-        ):
+        self.plate.rect.bottomleft = self.rect.move(-15, 15).topright
+
+        # # TODO: show plate
+        # if (
+        #     self._ticket is not None
+        #     and self._ticket.is_done()
+        #     and not self.plate.alive()
+        # ):
+        #     self.plate.add(self.plate.containers)
+        # else:
+        #     if self.plate.alive():
+        #         self.plate.kill()
+
+    def _hold_plate(self):
+        if not self.plate.alive():
             self.plate.add(self.plate.containers)
-        else:
-            if self.plate.alive():
-                self.plate.kill()
+
+    def _unhold_plate(self):
+        if self.plate.alive():
+            self.plate.kill()
 
     def get_ticket(self) -> Ticket:
         return self._ticket
