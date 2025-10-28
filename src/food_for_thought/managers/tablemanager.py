@@ -4,54 +4,64 @@ from .. import groups
 
 
 class TableManager:
-    # Minimum default time before table can decide order (in ms).
-    LOWER = 3000
-    # Max default time before table can decide order.
-    UPPER = 10000
+    _instance = None
+    _initialized = False
 
-    def __init__(self, spritegroup: pg.sprite.Group):
-        self.spritegroup = spritegroup
-        self.table = None
-        self.elapsed = None
-        # Acts as a table's random time before they decide to order. Needs to
-        # be chosen one at a time so it can be adjusted based on the number of
-        # tables currently ordering.
-        self.decide_time = 0
-        # Mark a specific point point in time where the last 'decide_time'
-        # was chosen.
-        self.last_decide_time = 0
+    INCREASE_SECS = 4
 
-    def update(self, elapsed):
-        self.elapsed = elapsed
-        # Decide time has not been chosen yet.
-        if not self.decide_time and self.tables_ready_order():
-            self.set_decide_time(
-                # Scale according to number of tables currently waiting.
-                self.LOWER * (self.num_waiting() + 1),
-                self.UPPER * (self.num_waiting() + 1),
-            )
+    INITIAL_MIN_DECIDING_SECS = 1
+    INITIAL_MAX_DECIDING_SECS = 5
 
-        # Amount of time passed since last order was placed.
-        if self.elapsed - self.last_decide_time > self.decide_time:
-            table = self.get_random_table()
-            table._decide_order()
-            self.decide_time = 0
+    # Will leave at this time.
+    SECS_BEFORE_LEAVE = 60
 
-    def tables_ready_order(self) -> list[Table]:
-        """Get list of all sprites who have decided their order and are
-        waiting to receive one from the chef.
-        """
-        return [sprite for sprite in self.spritegroup.sprites() if not sprite.order]
+    def __new__(cls):
+        if not cls._instance:
+            cls._instance = super().__new__(cls)
+        return cls._instance
 
-    def num_waiting(self) -> int:
-        """Return number of tables ready to order."""
-        return len(self.spritegroup) - len(self.tables_ready_order())
+    def __init__(self):
+        if TableManager._initialized:
+            return
+        self._next_order_time = 0.0
 
-    def get_random_table(self) -> Table:
-        """Choose random table from sprites."""
-        return random.choice(self.tables_ready_order())
+    def update(self, level_elapsed):
+        # Only on first loop.
+        if not self._next_order_time:
+            self._schedule_next_order_time(level_elapsed)
 
-    def set_decide_time(self, lower: int, upper: int) -> None:
-        """Choose random decide time based on a range in milliseconds."""
-        self.decide_time = random.randint(lower, upper)
-        self.last_decide_time = self.elapsed
+        # Time to order.
+        if level_elapsed >= self._next_order_time:
+            self._table_order()
+            self._schedule_next_order_time(level_elapsed)
+
+    def _table_order(self):
+        """Pick an available table and order."""
+        table = self._get_random_available_table()
+        table.decide_order()
+
+    def _get_random_available_table(self):
+        """Randomly choose an available table."""
+        return random.choice(self._get_tables_not_waiting())
+
+    def _schedule_next_order_time(self, level_elapsed) -> None:
+        """Update the next order time."""
+        min_deciding_secs = (
+            TableManager.INITIAL_MIN_DECIDING_SECS
+            + TableManager.INCREASE_SECS * self._get_num_waiting()
+        )
+        max_deciding_secs = (
+            TableManager.INITIAL_MAX_DECIDING_SECS
+            + TableManager.INCREASE_SECS * self._get_num_waiting()
+        )
+        self._next_order_time = level_elapsed + random.uniform(
+            min_deciding_secs, max_deciding_secs
+        )
+
+    def _get_tables_not_waiting(self) -> list[Table]:
+        """Get tables who are not waiting."""
+        return [table for table in groups.tables.sprites() if not table.is_waiting()]
+
+    def _get_num_waiting(self) -> int:
+        """Return number of tables waiting for food."""
+        return len([table for table in groups.tables.sprites() if table.is_waiting()])

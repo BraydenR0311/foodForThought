@@ -15,10 +15,12 @@ from ..components.levelclock import LevelClock
 from ..managers.gamestatemanager import GameStateManager
 from ..managers.visualmanager import VisualManager
 from ..managers.audiomanager import AudioManager
+from ..managers.tablemanager import TableManager
 
 gamestate_manager = GameStateManager()
 visual_manager = VisualManager()
 audio_manager = AudioManager()
+table_manager = TableManager()
 
 
 class Level(GameState):
