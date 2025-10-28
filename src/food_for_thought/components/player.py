@@ -33,7 +33,7 @@ class Player(pg.sprite.Sprite):
     containers = None
 
     ANIM_SPEED = 0.2
-    SPEED = 150
+    BASE_VELOCITY = 150
     SPRINT_MULTIPLIER = 2
 
     def __init__(self, center):
@@ -41,10 +41,11 @@ class Player(pg.sprite.Sprite):
         self.index = 0
         self.dx = 0
         self.dy = 0
+
         self.image = self.images["up_idle"]
         self.rect = self.image.get_rect(center=center)
         self.time = time.time()
-        self.center = pg.math.Vector2(0, 0)
+        self.center = pg.math.Vector2(*self.rect.center)
         self._ticket = None
         self.plate = Generic(config.IMAGE_DIR / "chef" / "plate.png")
         self.plate.kill()
@@ -77,7 +78,7 @@ class Player(pg.sprite.Sprite):
         }
 
     def update(self, dt, *args, **kwargs):
-        self.center = pg.math.Vector2(*self.rect.center)
+        self.center.xy = self.rect.center
 
         self.plate.rect.bottomleft = self.rect.move(-15, 15).topright
 
@@ -92,13 +93,25 @@ class Player(pg.sprite.Sprite):
         #     if self.plate.alive():
         #         self.plate.kill()
 
-    def _hold_plate(self):
-        if not self.plate.alive():
-            self.plate.add(self.plate.containers)
-
-    def _unhold_plate(self):
-        if self.plate.alive():
-            self.plate.kill()
+    def move(self, direction: str, dt: float, sprint: bool) -> None:
+        sprint_multiplier = Player.SPRINT_MULTIPLIER if sprint else 1
+        match direction:
+            case "up":
+                self.dy = -Player.BASE_VELOCITY * dt * sprint_multiplier
+                self.animate(self.animations["walk_up"])
+                self.rect.move_ip(0, self.dy)
+            case "down":
+                self.dy = Player.BASE_VELOCITY * dt * sprint_multiplier
+                self.animate(self.animations["walk_down"])
+                self.rect.move_ip(0, self.dy)
+            case "left":
+                self.dx = -Player.BASE_VELOCITY * dt * sprint_multiplier
+                self.animate(self.animations["walk_left"])
+                self.rect.move_ip(self.dx, 0)
+            case "right":
+                self.dx = Player.BASE_VELOCITY * dt * sprint_multiplier
+                self.animate(self.animations["walk_right"])
+                self.rect.move_ip(self.dx, 0)
 
     def interact(self, interact_tile) -> None:
         """Interact with an interactable tile."""
