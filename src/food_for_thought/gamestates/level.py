@@ -9,7 +9,8 @@ from .gamestate import GameState
 from .statekey import StateKey
 
 from ..components.player import Player
-from ..components.tile import Floor, Appliance, Table
+from ..components.tile import Floor, Appliance
+from ..components.table import Table
 from ..components.levelclock import LevelClock
 from ..managers.gamestatemanager import GameStateManager
 from ..managers.visualmanager import VisualManager

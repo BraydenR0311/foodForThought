@@ -1,7 +1,6 @@
 import random
-import pygame as pg
-
-from ..components.tile import Table
+from ..components.table import Table
+from .. import groups
 
 
 class TableManager:

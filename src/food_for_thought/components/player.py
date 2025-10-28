@@ -6,7 +6,7 @@ import pygame as pg
 
 from .. import config
 from .ticket import Ticket
-from .tile import InteractTile, Table, Appliance
+from .tile import InteractTile
 from .generic import Generic
 from .. import groups
 

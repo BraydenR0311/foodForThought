@@ -30,7 +30,8 @@ from .components.generic import Generic
 from .components.type_timer import TypeTimer
 from .components.levelclock import LevelClock
 from .components.text import Text
-from .components.tile import Tile, InteractTile, Appliance, Floor, Table
+from .components.tile import Tile, InteractTile, Appliance, Floor
+from .components.table import Table
 from .gamestates.statekey import StateKey
 from .managers.audiomanager import AudioManager
 from .managers.gamestatemanager import GameStateManager

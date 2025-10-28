@@ -5,7 +5,6 @@ import pygame as pg
 from .. import config
 from ..common import MENU
 from .food import Food, FoodState
-from .tile import Table
 from .text import Quote, Text
 from ..utils.utils import get_screen_rect
 
@@ -44,15 +43,15 @@ class Ticket(pg.sprite.Sprite):
     def update(self, *args, **kwargs):
         pass
 
-    def belongs_to(self, table: Table) -> bool:
-        return table is self._table
-
     @property
     def quote(self) -> Quote:
         return self._quote
 
     def is_done(self) -> bool:
         return not bool(len(self.quote))
+
+    def get_dish_name(self):
+        return self.dish_name
 
     def get_score(self) -> int:
         return sum(ingr.get_state() == FoodState.COOKED for ingr in self.ingredients)
