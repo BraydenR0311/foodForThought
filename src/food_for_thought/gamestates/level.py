@@ -67,17 +67,11 @@ class Level(GameState):
         right = keys[pg.K_d]
         sprint = keys[pg.K_LSHIFT]
 
-        speed = player.SPEED
-        if sprint:
-            speed *= player.SPRINT_MULTIPLIER
         if up:
-            player.dy = -speed * dt
-            player.animate(player.animations["walk_up"])
-            player.rect.move_ip(0, player.dy)
+            player.move("up", dt, sprint)
         if down:
-            player.dy = speed * dt
-            player.animate(player.animations["walk_down"])
-            player.rect.move_ip(0, player.dy)
+            player.move("down", dt, sprint)
+
         collided_tiles = pg.sprite.spritecollide(
             player, groups.interact_tiles, dokill=False
         )
@@ -87,13 +81,9 @@ class Level(GameState):
             elif player.dy < 0:
                 player.rect.top = tile.rect.bottom
         if left:
-            player.dx = -speed * dt
-            player.animate(player.animations["walk_left"])
-            player.rect.move_ip(player.dx, 0)
+            player.move("left", dt, sprint)
         if right:
-            player.dx = speed * dt
-            player.animate(player.animations["walk_right"])
-            player.rect.move_ip(player.dx, 0)
+            player.move("right", dt, sprint)
         collided_tiles = pg.sprite.spritecollide(
             player, groups.interact_tiles, dokill=False
         )
