@@ -47,8 +47,7 @@ class Player(pg.sprite.Sprite):
         self.time = time.time()
         self.center = pg.math.Vector2(*self.rect.center)
         self._ticket = None
-        self.plate = Generic(config.IMAGE_DIR / "chef" / "plate.png")
-        self.plate.kill()
+        self.plate = None
 
         self.animations = {
             "walk_up": [
@@ -80,7 +79,8 @@ class Player(pg.sprite.Sprite):
     def update(self, dt, *args, **kwargs):
         self.center.xy = self.rect.center
 
-        self.plate.rect.bottomleft = self.rect.move(-15, 15).topright
+        if self.plate:
+            self.plate.rect.bottomleft = self.rect.move(-15, 15).topright
 
         # # TODO: show plate
         # if (
@@ -120,10 +120,9 @@ class Player(pg.sprite.Sprite):
     def take_order(self, dish_name: str):
         """Instantiate ticket with a given dish name string. Called by table."""
         # Player already has order
-        if self.has_order():
+        if self.has_ticket():
             return
         self._ticket = Ticket(dish_name)
-        self._hold_plate()
 
     def give_dish(self):
         """Give dish to table. Called by table."""
@@ -131,16 +130,19 @@ class Player(pg.sprite.Sprite):
         self._ticket = None
         self._unhold_plate()
 
-    def has_order(self) -> bool:
+    def _hold_plate(self):
+        if not self.plate:
+            self.plate = Generic(config.IMAGE_DIR / "chef" / "plate.png")
+
+    def _unhold_plate(self):
+        if self.plate:
+            self.plate.kill()
+
+    def has_ticket(self) -> bool:
         return self._ticket is not None
 
     def get_ticket(self) -> Ticket | None:
         return self._ticket
-
-    def get_order_name(self) -> str | None:
-        if not self.has_order():
-            return
-        return self.get_ticket().dish_name
 
     def in_range(self, interact_tile: InteractTile) -> bool:
         return self.rect.colliderect(interact_tile.get_interaction_rect())
@@ -163,12 +165,6 @@ class Player(pg.sprite.Sprite):
     #             quote = self._ticket.quote.get()
     #             return (ingr, quote)
     #     return (None, None)
-
-    def _give_dish(self, table: Table):
-        """Give the dish to the table."""
-        table.receive_dish()
-        self._ticket.kill()
-        self._ticket = None
 
     def get_distance_from(self, other: pg.sprite.Sprite):
         """Uses pygame's Vector2 to calculate Euclidean distance."""
