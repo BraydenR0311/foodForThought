@@ -20,9 +20,8 @@ class Popup(pg.sprite.Sprite):
         self.start = pg.time.get_ticks()
 
     def update(self, elapsed, *args, **kwargs):
-        print(self.start)
-        self.animate(elapsed - self.start)
+        self._animate(elapsed - self.start)
 
-    def animate(self, elapsed):
+    def _animate(self, elapsed):
         sin_val = math.sin(elapsed / 300) * 10
         self.rect.y = self.initial_y + sin_val
