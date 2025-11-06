@@ -4,28 +4,43 @@ from abc import ABC
 import pygame as pg
 
 
-from ..common import MENU, TILE_IMAGE_PATHS, APPLIANCE_DICT
-from ..components.food import Food
 from ..managers.gamestatemanager import GameStateManager
 from ..managers.audiomanager import AudioManager
 from ..gamestates.statekey import StateKey
 from .popup import Popup
+from enum import Enum
+from .. import config
 
 gamestate_manager = GameStateManager()
 audio_manager = AudioManager()
 
 
+class TileType(Enum):
+    oven = "o"
+    cutting_board = "c"
+    fryer = "f"
+    table = "t"
+    floor = "#"
+    player = "p"
+
+
 # Only inherited from.
 class Tile(pg.sprite.Sprite, ABC):
-    IMAGE_PATHS = TILE_IMAGE_PATHS
+    IMAGE_PATHS = {
+        TileType.floor: config.TILE_DIR / "floor.png",
+        TileType.fryer: config.TILE_DIR / "fryer.png",
+        TileType.oven: config.TILE_DIR / "oven.png",
+        TileType.cutting_board: config.TILE_DIR / "cutting.png",
+        TileType.table: config.TILE_DIR / "table.png",
+    }
 
     containers = None
     images = {}
 
-    def __init__(self, kind: str, rect: pg.Rect):
+    def __init__(self, tile_type: TileType, rect: pg.Rect):
         super().__init__()
-        self.kind = kind
-        self.image = self.images[self.kind]
+        self.tile_type = tile_type
+        self.image = self.images[self.tile_type]
         # Will overwrite this rect immediately.
         self.rect = rect
         if not self.containers:
@@ -34,17 +49,17 @@ class Tile(pg.sprite.Sprite, ABC):
 
 
 class Floor(Tile):
-    def __init__(self, kind: str, rect: pg.Rect):
-        super().__init__(kind, rect)
+    def __init__(self, tile_type: TileType, rect: pg.Rect):
+        super().__init__(tile_type, rect)
 
 
 class InteractTile(Tile):
     def __init__(
         self,
-        kind: str,
+        tile_type: TileType,
         rect: pg.Rect,
     ):
-        super().__init__(kind, rect)
+        super().__init__(tile_type, rect)
         # Define the allowable area for player interaction.
         self._interaction_rect = self.rect.inflate(70, 70)
         self.popup = None
@@ -64,22 +79,3 @@ class InteractTile(Tile):
     def unshow_interaction_popup(self):
         if self.popup is not None:
             self.popup.kill()
-
-
-class Appliance(InteractTile):
-    def __init__(
-        self,
-        kind: str,
-        rect: pg.Rect,
-    ):
-        super().__init__(kind, rect)
-
-    def can_cook(self, kind: str) -> bool:
-        return self.kind == APPLIANCE_DICT[kind]
-
-    def interact(self, player):
-        if not player.has_order():
-            return
-        for ingredient in player.get_ticket().get_unfinished():
-            if self.can_cook(ingredient):
-                gamestate_manager.goto(StateKey.COOK, {""})
