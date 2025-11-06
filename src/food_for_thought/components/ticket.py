@@ -3,10 +3,19 @@ from typing import override
 import pygame as pg
 
 from .. import config
-from ..common import MENU
-from .food import Food, FoodState
+from .menu import MENU
 from .text import Quote, Text
-from ..utils.utils import get_screen_rect
+from .generic import Generic
+from enum import Enum, auto
+from ..managers.visualmanager import VisualManager
+
+visual_manager = VisualManager()
+
+
+class FoodState(Enum):
+    UNFINISHED = auto()
+    COOKED = auto()
+    RUINED = auto()
 
 
 class Ticket(pg.sprite.Sprite):
@@ -17,6 +26,8 @@ class Ticket(pg.sprite.Sprite):
     # Offset for the rest of the elements displayed on the ticket.
     SUBOFFSET = 10
 
+    IMAGE_SIZE = 20
+
     IMAGE_PATHS = {"ticket": config.IMAGE_DIR / "ticket" / "ticket.png"}
 
     containers = None
@@ -24,82 +35,54 @@ class Ticket(pg.sprite.Sprite):
 
     def __init__(self, dish_name):
         super().__init__(self.containers)
-        self.dish_name = dish_name
+        self._dish_name = dish_name
         self._quote = Quote()
-
-        # Text object that is used on the ticket.
-        self.dish_name_text = Text(self.dish_name, 8, "black")
-        self.ingredients = self._set_ingredients()
-        self.num_correct = 0
-
-        self._table = None
+        self._ingredients = MENU[self._dish_name].ingredients
+        # Topleft of each sprite.
+        self._grid = [[(30, 30), (60, 30)], [(30, 60), (60, 60)], [(30, 90), (60, 90)]]
+        self._sprites = pg.sprite.Group()
 
         self.image = self.images["ticket"]
-        self.rect = self.image.get_rect()
 
-        # Position self and items.
-        self._position_items()
+        # Position sprite.
+        self.rect = self.image.get_rect(midtop=visual_manager.get_screen_rect().midtop)
+        self.rect.move_ip(10, 0)
+
+        # Display food.
+        for ingredient, coordinate in zip(self._ingredients, self._grid):
+            self._sprites.add(
+                Generic(
+                    ingredient.image_path,
+                    (Ticket.IMAGE_SIZE, Ticket.IMAGE_SIZE),
+                    topleft=self.rect.move(coordinate[0]).topleft,
+                )
+            )
+
+        # Text object that is used on the ticket.
+        self._sprites.add(
+            Text(
+                self._dish_name,
+                8,
+                "black",
+                bottomleft=self.rect.move(10, -10).bottomleft,
+            )
+        )
 
     def update(self, *args, **kwargs):
         pass
 
-    @property
-    def quote(self) -> Quote:
-        return self._quote
-
     def is_done(self) -> bool:
-        return not bool(len(self.quote))
+        return not bool(len(self._quote))
 
     def get_dish_name(self):
-        return self.dish_name
+        return self._dish_name
 
     def get_score(self) -> int:
-        return sum(ingr.get_state() == FoodState.COOKED for ingr in self.ingredients)
-
-    def get_unfinished(self):
-        return [
-            ingr
-            for ingr in self.ingredients
-            if ingr.get_state() == FoodState.UNFINISHED
-        ]
-
-    def _set_ingredients(self) -> list[Food]:
-        """Create Food objects based on the dish and its ingredients."""
-        return [Food(ingredient) for ingredient in MENU[self.dish_name]]
+        return sum(ingr.get_state() == FoodState.COOKED for ingr in self._ingredients)
 
     @override
     def kill(self) -> None:
         """Player has finished all 3 quotes."""
         super().kill()
-        for ingredient in self.ingredients:
-            ingredient.kill()
-            ingredient.appliance_hint.kill()
-            ingredient.status.kill()
-
-    def _position_items(self):
-        """Position self and objects within self."""
-        # Position self.
-        self.rect.midtop = get_screen_rect().midtop
-        self.rect.move_ip(0, self.SUBOFFSET)
-
-        # Position ingredients.
-        previous_ingredient = None
-        for ingredient in self.ingredients:
-            # Position first ingredient.
-            if not previous_ingredient:
-                # Match topleft corners.
-                ingredient.rect.topleft = self.rect.topleft
-                # Offset first ingredient.
-                ingredient.rect.move_ip(self.SUBOFFSET, self.FIRST_OFFSET)
-            else:
-                # Match topleft corner to bottom left of previous ingredient.
-                ingredient.rect.topleft = previous_ingredient.rect.bottomleft
-                ingredient.rect.move_ip(0, self.SUBOFFSET)
-
-            ingredient.appliance_hint.rect.midleft = ingredient.rect.midright
-            ingredient.appliance_hint.rect.move_ip(self.SUBOFFSET, 0)
-
-            previous_ingredient = ingredient
-
-            self.dish_name_text.rect.bottomleft = self.rect.bottomleft
-            self.dish_name_text.rect.move_ip(self.SUBOFFSET, -self.SUBOFFSET)
+        for sprite in self._sprites.sprites():
+            sprite.kill()
