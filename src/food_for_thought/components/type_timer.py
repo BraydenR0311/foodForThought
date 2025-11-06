@@ -2,8 +2,10 @@ from typing import override
 
 from .. import config
 from .text import Text
-from ..utils.utils import get_screen_rect
 from .generic import Generic
+from ..managers.visualmanager import VisualManager
+
+visual_manager = VisualManager()
 
 
 class TypeTimer(Text):
@@ -27,8 +29,8 @@ class TypeTimer(Text):
         self.wrongs = []
 
         # Position sprite.
-        self.rect.center = get_screen_rect().center
-        self.rect.move_ip(get_screen_rect().width // 3, 0)
+        self.rect.center = visual_manager.get_screen_rect().center
+        self.rect.move_ip(visual_manager.get_screen_rect().width // 3, 0)
 
         self._done = False
 
