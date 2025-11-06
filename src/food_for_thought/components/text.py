@@ -58,24 +58,21 @@ class Quote:
         self._lastname = self._author.split(" ")[-1]
         self._content = data["quote"].replace("\n", " ")
 
-        self._quote_parts = [
-            QuotePart(part) for part in self._split_quote(self._content)
-        ]
+        self._chunks = self._split_quote(self._content)
 
-    def __len__(self):
-        return len(self._quote_parts)
+    def __len__(self) -> int:
+        return len(self._chunks)
 
     def get_content(self) -> str:
         """Returns the entire quote, regardless if any have been popped."""
         return self._content
 
-    def pop(self):
-        """Pop the first quote part. Returns none if empty."""
-        # If there are quote parts left...
-        if self._quote_parts:
-            quote_part = self._quote_parts.pop(0)
-            return quote_part
-        return None
+    def pop(self) -> str | None:
+        """Pop the first quote part. Returns None if empty."""
+        if not self._chunks:
+            return None
+        chunk = self._chunks.pop(0)
+        return chunk
 
     @staticmethod
     def _split_quote(quote):
@@ -87,15 +84,6 @@ class Quote:
         second = " ".join(quote[chunk_len : 2 * chunk_len])
         third = " ".join(quote[2 * chunk_len :])
 
-        quotes = [first, second, third]
+        chunks = [first, second, third]
 
-        return quotes
-
-
-class QuotePart:
-    def __init__(self, content: str):
-        super().__init__()
-        self._content = content
-
-    def get_content(self) -> str:
-        return self._content
+        return chunks
