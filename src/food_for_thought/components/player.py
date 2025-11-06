@@ -122,16 +122,27 @@ class Player(pg.sprite.Sprite):
 
     def take_order(self, dish_name: str):
         """Instantiate ticket with a given dish name string. Called by table."""
-        # Player already has order
-        if self.has_ticket():
+        # Player already has a ticket.
+        if self._ticket:
             return
         self._ticket = Ticket(dish_name)
 
-    def give_dish(self):
+    def has_ticket(self) -> bool:
+        return self._ticket is not None
+
+    def give_order(self):
         """Give dish to table. Called by table."""
         self._ticket.kill()
         self._ticket = None
         self._unhold_plate()
+
+    def get_dish_name(self) -> str | None:
+        if not self._ticket:
+            return None
+        return self._ticket.get_dish_name()
+
+    def has_finished_order(self) -> bool:
+        return not self._ticket or self._ticket.is_done()
 
     def _hold_plate(self):
         if not self.plate:
@@ -140,9 +151,6 @@ class Player(pg.sprite.Sprite):
     def _unhold_plate(self):
         if self.plate:
             self.plate.kill()
-
-    def has_ticket(self) -> bool:
-        return self._ticket is not None
 
     def get_ticket(self) -> Ticket | None:
         return self._ticket
