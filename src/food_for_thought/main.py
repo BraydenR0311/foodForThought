@@ -21,7 +21,6 @@ import pygame as pg
 
 # TODO: Replace Status and Popup to Generic
 from .components.button import Button
-from .components.food import Food
 from .components.player import Player
 from .components.popup import Popup
 from .components.ticket import Ticket
@@ -82,7 +81,7 @@ visualmanager = VisualManager()
 
 visualmanager.load_screen()
 # Set images for each class.
-for sprite_class in (Food, Player, Tile, Popup, Button, Ticket, Status):
+for sprite_class in (Player, Tile, Popup, Button, Ticket, Status):
     visualmanager.set_sprite_images(sprite_class)
 
 audio_manager = AudioManager()
