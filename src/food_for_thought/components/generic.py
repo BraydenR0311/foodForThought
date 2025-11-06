@@ -12,10 +12,17 @@ class Generic(pg.sprite.Sprite):
     containers = None
     images = {}
 
-    def __init__(self, image_path: str | Path):
+    def __init__(
+        self,
+        image_path: str | Path,
+        image_size: tuple[int, int] | None = None,
+        **rect_kwargs,
+    ):
         super().__init__(self.containers)
         self.image = pg.image.load(image_path).convert_alpha()
-        self.rect = self.image.get_rect()
+        if image_size:
+            self.image = pg.transform.scale(self.image, image_size)
+        self.rect = self.image.get_rect(**rect_kwargs)
 
     def change_image(self, image) -> None:
         self.image = image
