@@ -1,7 +1,10 @@
 import pygame as pg
 
 from .text import Text
-from ..utils.utils import get_screen_rect
+from ..managers.visualmanager import VisualManager
+
+
+visual_manager = VisualManager()
 
 
 class LevelClock(Text):
@@ -47,4 +50,4 @@ class LevelClock(Text):
             self.tick = not self.tick
         self.text = str(self.hour) + ":00"
         # When text, make sure it's positioned correctly.
-        self.rect.topright = get_screen_rect().topright
+        self.rect.topright = visual_manager.get_screen_rect().topright
