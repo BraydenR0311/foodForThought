@@ -12,7 +12,9 @@ class Text(pg.sprite.Sprite):
 
     containers = None
 
-    def __init__(self, content: str, fontsize, color, bgcolor=None) -> None:
+    def __init__(
+        self, content: str, fontsize, color, bgcolor=None, **rect_kwargs
+    ) -> None:
         super().__init__(self.containers)
         self._content = str(content)
         self._font = pg.font.Font(config.DEFAULT_FONT, fontsize)
@@ -20,7 +22,7 @@ class Text(pg.sprite.Sprite):
         self._bgcolor = bgcolor
 
         self.image = self._font.render(self._content, True, self._color, self._bgcolor)
-        self.rect = self.image.get_rect()
+        self.rect = self.image.get_rect(**rect_kwargs)
 
     @override
     def update(self, *args, **kwargs):
