@@ -6,7 +6,7 @@ import pygame as pg
 
 from .. import config
 from .ticket import Ticket
-from .tile import InteractTile
+from .tile import InteractTile, TileType
 from .generic import Generic
 from .. import groups
 
@@ -27,6 +27,7 @@ class Player(pg.sprite.Sprite):
         "left_walk_2": config.IMAGE_DIR / "chef" / "left_walk_2.png",
         "plate": config.IMAGE_DIR / "chef" / "plate.png",
     }
+    TILE_TYPE = TileType.player
 
     images = {}
 
@@ -35,6 +36,8 @@ class Player(pg.sprite.Sprite):
     ANIM_SPEED = 0.2
     BASE_VELOCITY = 150
     SPRINT_MULTIPLIER = 2
+
+    tile_type = TileType.player
 
     def __init__(self, center):
         super().__init__(self.containers)
