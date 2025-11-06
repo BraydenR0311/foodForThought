@@ -79,6 +79,7 @@ TypeTimer.containers = groups.texts, groups.all_sprites
 # Setup resource managers.
 visualmanager = VisualManager()
 
+
 visualmanager.load_screen()
 # Set images for each class.
 for sprite_class in (Food, Player, Tile, Popup, Button, Ticket, Status):
