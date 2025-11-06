@@ -1,19 +1,22 @@
 import random
 from ..components.table import Table
 from .. import groups
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class TableManager:
     _instance = None
     _initialized = False
 
-    INCREASE_SECS = 4
+    INCREASE_TIME = 4000
 
-    INITIAL_MIN_DECIDING_SECS = 1
-    INITIAL_MAX_DECIDING_SECS = 5
+    INITIAL_MIN_DECIDING_TIME = 1000
+    INITIAL_MAX_DECIDING_TIME = 5000
 
     # Will leave at this time.
-    SECS_BEFORE_LEAVE = 60
+    TIME_BEFORE_LEAVE = 60000
 
     def __new__(cls):
         if not cls._instance:
@@ -38,30 +41,40 @@ class TableManager:
     def _table_order(self):
         """Pick an available table and order."""
         table = self._get_random_available_table()
-        table.decide_order()
+        if table:
+            table.decide_order()
 
     def _get_random_available_table(self):
         """Randomly choose an available table."""
-        return random.choice(self._get_tables_not_waiting())
+        available_tables = [
+            table for table in groups.tables.sprites() if table.can_order()
+        ]
+        if not available_tables:
+            return
+        return random.choice(available_tables)
 
     def _schedule_next_order_time(self, level_elapsed) -> None:
         """Update the next order time."""
-        min_deciding_secs = (
-            TableManager.INITIAL_MIN_DECIDING_SECS
-            + TableManager.INCREASE_SECS * self._get_num_waiting()
+        min_deciding_time = (
+            TableManager.INITIAL_MIN_DECIDING_TIME
+            + TableManager.INCREASE_TIME * self._get_num_waiting()
         )
-        max_deciding_secs = (
-            TableManager.INITIAL_MAX_DECIDING_SECS
-            + TableManager.INCREASE_SECS * self._get_num_waiting()
+        max_deciding_time = (
+            TableManager.INITIAL_MAX_DECIDING_TIME
+            + TableManager.INCREASE_TIME * self._get_num_waiting()
         )
         self._next_order_time = level_elapsed + random.uniform(
-            min_deciding_secs, max_deciding_secs
+            min_deciding_time, max_deciding_time
         )
-
-    def _get_tables_not_waiting(self) -> list[Table]:
-        """Get tables who are not waiting."""
-        return [table for table in groups.tables.sprites() if not table.is_waiting()]
+        logger.debug(
+            "Next order time: %.2f. Min: %.2f. Max: %.2f",
+            self._next_order_time,
+            min_deciding_time,
+            max_deciding_time,
+        )
 
     def _get_num_waiting(self) -> int:
         """Return number of tables waiting for food."""
-        return len([table for table in groups.tables.sprites() if table.is_waiting()])
+        return len(
+            [table for table in groups.tables.sprites() if not table.can_order()]
+        )
