@@ -12,10 +12,10 @@ logger = logging.getLogger(__name__)
 class Appliance(InteractTile):
     def __init__(
         self,
-        type: str,
+        tile_type,
         rect: pg.Rect,
     ):
-        super().__init__(type, rect)
+        super().__init__(tile_type, rect)
 
     def interact(self, player):
         ticket = player.get_ticket()
