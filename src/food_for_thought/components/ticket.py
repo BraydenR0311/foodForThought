@@ -38,6 +38,8 @@ class Ticket(pg.sprite.Sprite):
         self._dish_name = dish_name
         self._quote = Quote()
         self._ingredients = MENU[self._dish_name].ingredients
+        self._num_wrong = 0
+        self._num_correct = 0
         # Topleft of each sprite.
         self._grid = [[(30, 30), (60, 30)], [(30, 60), (60, 60)], [(30, 90), (60, 90)]]
         self._sprites = pg.sprite.Group()
@@ -70,6 +72,35 @@ class Ticket(pg.sprite.Sprite):
 
     def update(self, *args, **kwargs):
         pass
+
+    def wrong(self):
+        idx = self._num_wrong + self._num_correct
+        if not idx < len(self._ingredients):
+            return
+        self._sprites.add(
+            Generic(
+                config.TICKET_DIR / "x.png",
+                (Ticket.IMAGE_SIZE, Ticket.IMAGE_SIZE),
+                topleft=self.rect.move(self._grid[idx][1]).topleft,
+            )
+        )
+        self._num_wrong += 1
+
+    def correct(self):
+        idx = self._num_wrong + self._num_correct
+        if not idx < len(self._ingredients):
+            return
+        self._sprites.add(
+            Generic(
+                config.TICKET_DIR / "check.png",
+                (Ticket.IMAGE_SIZE, Ticket.IMAGE_SIZE),
+                topleft=self.rect.move(self._grid[idx][1]).topleft,
+            )
+        )
+        self._num_correct += 1
+
+    def pop(self):
+        return self._quote.pop()
 
     def is_done(self) -> bool:
         return not bool(len(self._quote))
