@@ -83,16 +83,8 @@ class Player(pg.sprite.Sprite):
         if self.plate:
             self.plate.rect.bottomleft = self.rect.move(-15, 15).topright
 
-        # # TODO: show plate
-        # if (
-        #     self._ticket is not None
-        #     and self._ticket.is_done()
-        #     and not self.plate.alive()
-        # ):
-        #     self.plate.add(self.plate.containers)
-        # else:
-        #     if self.plate.alive():
-        #         self.plate.kill()
+        if self._ticket and self._ticket.is_done():
+            self._hold_plate()
 
     def move(self, direction: str, dt: float, sprint: bool) -> None:
         sprint_multiplier = Player.SPRINT_MULTIPLIER if sprint else 1
@@ -128,11 +120,16 @@ class Player(pg.sprite.Sprite):
     def has_ticket(self) -> bool:
         return self._ticket is not None
 
-    def give_order(self):
-        """Give dish to table. Called by table."""
+    def get_finished_dish_name(self) -> str | None:
+        """Return dish name if ticket is done. If not, return None."""
+        if not self._ticket or self._ticket.is_done():
+            return None
+
         self._ticket.kill()
+        dish_name = self._ticket.get_dish_name()
         self._ticket = None
         self._unhold_plate()
+        return dish_name
 
     def get_dish_name(self) -> str | None:
         if not self._ticket:
