@@ -44,13 +44,16 @@ class Text(pg.sprite.Sprite):
         """Update color in place."""
         self._color = new_color
 
-    def add_char(self, char: str):
+    def replace_text(self, text: str) -> None:
+        self._content = text
+
+    def append_char(self, char: str):
         """Add a single character to the end of the string."""
-        if not len(char) != 1:
+        if len(char) > 1:
             raise ValueError("Char must be a string with length == 1.")
         self._content += char
 
-    def remove_char(self) -> None:
+    def backspace(self) -> None:
         """Remove number of letters from the end"""
         self._content = self._content[:-1]
 
