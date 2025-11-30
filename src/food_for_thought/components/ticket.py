@@ -35,11 +35,6 @@ class TicketIngredient:
 class Ticket(pg.sprite.Sprite):
     """Manages QuoteSection and Food objects."""
 
-    # First element(s) from top will be pushed down 30px.
-    FIRST_OFFSET = 30
-    # Offset for the rest of the elements displayed on the ticket.
-    SUBOFFSET = 10
-
     IMAGE_SIZE = 20
 
     IMAGE_PATHS = {"ticket": config.IMAGE_DIR / "ticket" / "ticket.png"}
