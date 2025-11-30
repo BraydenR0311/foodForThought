@@ -1,6 +1,12 @@
 import pygame as pg
 from .type_timer import TypeTimer
 from ..components.text import Text
+from ..managers.visualmanager import VisualManager
+import logging
+
+logger = logging.getLogger(__name__)
+
+visual_manager = VisualManager()
 
 
 class TypeUI:
