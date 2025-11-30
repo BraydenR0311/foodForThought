@@ -24,6 +24,14 @@ class FoodState(Enum):
     RUINED = auto()
 
 
+@dataclass
+class TicketIngredient:
+    metadata: Ingredient
+    food_coordinate: tuple[int, int]
+    status_coordinate: tuple[int, int]
+    prepared: bool = False
+
+
 class Ticket(pg.sprite.Sprite):
     """Manages QuoteSection and Food objects."""
 
