@@ -46,13 +46,13 @@ class Table(InteractTile):
         if not self._order_taken:
             player.take_order(self._decided_dish_name)
             self._order_taken = True
-            self._popup.kill()
+            self.unshow_interaction_popup()
             return
-        if (
-            player.has_finished_order()
-            and self._decided_dish_name == player.get_dish_name()
-        ):
-            player.give_order()
+
+        finished_ticket_dish_name = player.get_finished_dish_name()
+        if not finished_ticket_dish_name:
+            return
+        if self._decided_dish_name == finished_ticket_dish_name:
             self._receive_order()
 
     def decide_order(self):
@@ -60,7 +60,7 @@ class Table(InteractTile):
             return
         self._decided_dish_name = random.choice(list(MENU.keys()))
         logger.debug("Decided dish: %s", self._decided_dish_name)
-        self._popup = Popup(self.rect.center)
+        self.show_interaction_popup()
 
     def can_order(self) -> bool:
         return not self._decided_dish_name
@@ -68,4 +68,4 @@ class Table(InteractTile):
     def _receive_order(self):
         self._decided_dish_name = ""
         self._order_taken = False
-        pg.event.post(pg.event.Event(game_events.TABLE_RECEIVE_DISH))
+        pg.event.post(pg.event.Event(game_events.TABLE_RECEIVE_DISH, {"table": self}))
