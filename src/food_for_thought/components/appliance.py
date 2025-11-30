@@ -16,8 +16,24 @@ class Appliance(InteractTile):
     ):
         super().__init__(tile_type, rect)
 
-    def interact(self, player):
+    def interact(self, player: Player):
         ticket = player.get_ticket()
         if not ticket:
             return
-        pg.event.post(pg.event.Event(game_events.APPLIANCE_COOK, {"appliance": self}))
+
+        if not (cook_ingredient := ticket.get_cookable(self.tile_type)):
+            return
+
+        if not cook_ingredient.metadata.appliance == self.tile_type:
+            return
+
+        pg.event.post(
+            pg.event.Event(
+                game_events.APPLIANCE_COOK,
+                {
+                    "appliance": self,
+                    "ticket": ticket,
+                    "cook_ingredient": cook_ingredient,
+                },
+            )
+        )
