@@ -89,31 +89,42 @@ class Ticket(pg.sprite.Sprite):
     def update(self, *args, **kwargs):
         pass
 
-    def wrong(self):
-        idx = self._num_wrong + self._num_correct
-        if not idx < len(self._ingredients):
-            return
-        self._sprites.add(
-            Generic(
-                config.TICKET_DIR / "x.png",
-                (Ticket.IMAGE_SIZE, Ticket.IMAGE_SIZE),
-                topleft=self.rect.move(self._grid[idx][1]).topleft,
-            )
+    def get_cookable(self, tile_type: TileType) -> TicketIngredient | None:
+        return next(
+            (ingredient for ingredient in self._ingredients if not ingredient.prepared),
+            None,
         )
+
+    def mark_wrong(self, ingredient_name: str):
+        self._mark_finished(ingredient_name, config.TICKET_DIR / "x.png")
         self._num_wrong += 1
 
-    def correct(self):
-        idx = self._num_wrong + self._num_correct
-        if not idx < len(self._ingredients):
+    def mark_correct(self, ingredient_name: str):
+        self._mark_finished(ingredient_name, config.TICKET_DIR / "check.png")
+        self._num_correct += 1
+
+    def _mark_finished(self, ingredient_name: str, image_path: Path):
+        """Returns True if successful."""
+        ingredient = next(
+            (
+                ingredient
+                for ingredient in self._ingredients
+                if ingredient.metadata.name == ingredient_name
+            ),
+            None,
+        )
+        if not ingredient:
+            logging.error("Cannot mark. Ingredient specified not found.")
             return
+
         self._sprites.add(
             Generic(
-                config.TICKET_DIR / "check.png",
+                image_path,
                 (Ticket.IMAGE_SIZE, Ticket.IMAGE_SIZE),
-                topleft=self.rect.move(self._grid[idx][1]).topleft,
+                topleft=self.rect.move(ingredient.status_coordinate).topleft,
             )
         )
-        self._num_correct += 1
+        ingredient.prepared = True
 
     def pop(self):
         return self._quote.pop()
