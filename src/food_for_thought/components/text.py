@@ -5,6 +5,9 @@ import pygame as pg
 
 from .. import config
 from ..common import QUOTE_DATA
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class Text(pg.sprite.Sprite):
