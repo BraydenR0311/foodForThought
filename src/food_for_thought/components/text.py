@@ -16,10 +16,15 @@ class Text(pg.sprite.Sprite):
     containers = None
 
     def __init__(
-        self, content: str, fontsize, color, bgcolor=None, **rect_kwargs
+        self,
+        content: str,
+        fontsize: int,
+        color: str = "black",
+        bgcolor=None,
+        **rect_kwargs,
     ) -> None:
         super().__init__(self.containers)
-        self._content = str(content)
+        self._content = content
         self._font = pg.font.Font(config.DEFAULT_FONT, fontsize)
         self._color = color
         self._bgcolor = bgcolor
