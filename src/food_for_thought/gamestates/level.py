@@ -122,8 +122,23 @@ class Level(GameState):
             elif event.type == game_events.TABLE_RECEIVE_DISH:
                 pass
             elif event.type == game_events.APPLIANCE_COOK:
-                logger.debug("Cooking on %s", event.appliance)
-                gamestate_manager.goto(StateKey.COOK)
+                logger.debug(
+                    "Cooking %s (%s) on %s",
+                    event.cook_ingredient.metadata.name,
+                    event.cook_ingredient.metadata.appliance,
+                    event.appliance.tile_type,
+                )
+                gamestate_manager.goto(
+                    StateKey.COOK,
+                    data={
+                        "ticket": event.ticket,
+                        "appliance": event.appliance,
+                        "level_clock": self.level_clock,
+                        "cook_ingredient": event.cook_ingredient,
+                    },
+                )
+            elif event.type == game_events.TABLE_RECEIVE_DISH:
+                logger.debug("Dish received.")
 
         keys = pg.key.get_pressed()
         player = self.player
