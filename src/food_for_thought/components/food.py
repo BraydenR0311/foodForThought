@@ -1,7 +1,4 @@
 
-from .. import config
-from ..components.status import Status
-from ..components.generic import Generic
 # from ..common import TILE_IMAGE_PATHS
 
 
