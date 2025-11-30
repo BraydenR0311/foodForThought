@@ -47,7 +47,9 @@ class TypeTimer(Text):
 
     def add_wrong(self):
         """When the user messes up typing, add an X below timer."""
-        wrong = Generic(config.IMAGE_DIR / "x.png")
+        if len(self.wrongs) >= 2:
+            return
+        wrong = Generic(config.TICKET_DIR / "x.png")
         # Position.
         wrong.rect.center = self.rect.center
         wrong.rect.move_ip(self.wrong_locs[len(self.wrongs)])
