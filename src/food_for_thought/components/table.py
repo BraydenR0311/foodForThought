@@ -3,7 +3,6 @@ import random
 
 
 from .tile import InteractTile, TileType
-from .popup import Popup
 from .menu import MENU
 from .. import game_events
 import logging

@@ -1,6 +1,3 @@
-from enum import Enum, auto
-from typing import override
-import pygame as pg
 
 from .. import config
 from ..components.status import Status

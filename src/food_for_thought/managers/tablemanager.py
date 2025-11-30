@@ -1,5 +1,4 @@
 import random
-from ..components.table import Table
 from .. import groups
 import logging
 

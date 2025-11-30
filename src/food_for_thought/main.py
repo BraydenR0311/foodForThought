@@ -29,7 +29,7 @@ from .components.generic import Generic
 from .components.type_timer import TypeTimer
 from .components.levelclock import LevelClock
 from .components.text import Text
-from .components.tile import Tile, InteractTile, Floor, TileType
+from .components.tile import Tile, InteractTile, Floor
 from .components.appliance import Appliance
 from .components.table import Table
 from .gamestates.statekey import StateKey

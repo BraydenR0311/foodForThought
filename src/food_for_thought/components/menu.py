@@ -1,4 +1,3 @@
-import pygame as pg
 from dataclasses import dataclass
 from .tile import TileType
 from pathlib import Path

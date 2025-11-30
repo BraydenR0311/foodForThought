@@ -1,5 +1,4 @@
 import time
-from typing import Protocol
 
 import pygame as pg
 
@@ -8,7 +7,6 @@ from .. import config
 from .ticket import Ticket
 from .tile import InteractTile, TileType
 from .generic import Generic
-from .. import groups
 
 
 class Player(pg.sprite.Sprite):

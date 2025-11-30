@@ -1,10 +1,9 @@
 import pygame as pg
 
 from .tile import InteractTile
-from ..gamestates.statekey import StateKey
 import logging
 from .. import game_events
-from enum import Enum, auto
+from .player import Player
 
 logger = logging.getLogger(__name__)
 

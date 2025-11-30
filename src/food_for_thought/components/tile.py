@@ -1,4 +1,3 @@
-import random
 from abc import ABC
 
 import pygame as pg
@@ -6,7 +5,6 @@ import pygame as pg
 
 from ..managers.gamestatemanager import GameStateManager
 from ..managers.audiomanager import AudioManager
-from ..gamestates.statekey import StateKey
 from .popup import Popup
 from enum import Enum
 from .. import config

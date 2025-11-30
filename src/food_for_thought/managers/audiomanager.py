@@ -3,7 +3,6 @@ import random
 import pygame as pg
 
 from ..config import SOUND_DIR, MUSIC_DIR
-import random
 
 
 class AudioManager:
