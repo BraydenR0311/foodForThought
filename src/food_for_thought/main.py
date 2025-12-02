@@ -18,27 +18,12 @@
 
 import pygame as pg
 
-
-# TODO: Replace Status and Popup to Generic
-from .components.button import Button
-from .components.player import Player
-from .components.popup import Popup
-from .components.ticket import Ticket
-from .components.status import Status
-from .components.generic import Generic
-from .components.type_timer import TypeTimer
-from .components.levelclock import LevelClock
-from .components.text import Text
-from .components.tile import Tile, InteractTile, Floor
-from .components.appliance import Appliance
-from .components.table import Table
 from .gamestates.statekey import StateKey
 from .managers.audiomanager import AudioManager
 from .managers.gamestatemanager import GameStateManager
 from .gamestates.mainmenu import MainMenu
 from .gamestates.level import Level
 from .gamestates.cook import Cook
-from . import groups
 import sys
 import logging
 
@@ -50,29 +35,6 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 # Assign sprite classes to certain groups.
-InteractTile.containers = groups.interact_tiles, groups.kitchen, groups.all_sprites
-Appliance.containers = (
-    groups.appliances,
-    groups.interact_tiles,
-    groups.kitchen,
-    groups.all_sprites,
-)
-Table.containers = (
-    groups.tables,
-    groups.interact_tiles,
-    groups.kitchen,
-    groups.all_sprites,
-)
-Button.containers = groups.buttons, groups.all_sprites
-Floor.containers = groups.kitchen, groups.all_sprites
-Generic.containers = groups.generics, groups.all_sprites
-Status.containers = groups.statuses, groups.all_sprites
-Player.containers = groups.player_group, groups.all_sprites
-Popup.containers = groups.popups, groups.all_sprites
-LevelClock.containers = groups.texts, groups.all_sprites
-Text.containers = groups.texts, groups.all_sprites
-Ticket.containers = groups.tickets, groups.all_sprites
-TypeTimer.containers = groups.texts, groups.all_sprites
 
 
 # Setup resource managers.
@@ -81,8 +43,7 @@ visualmanager = VisualManager()
 
 visualmanager.load_screen()
 # Set images for each class.
-for sprite_class in (Player, Tile, Popup, Button, Ticket, Status):
-    visualmanager.set_sprite_images(sprite_class)
+
 
 audio_manager = AudioManager()
 

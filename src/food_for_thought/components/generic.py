@@ -1,5 +1,6 @@
 import pygame as pg
 from pathlib import Path
+from .. import groups
 
 
 class Generic(pg.sprite.Sprite):
@@ -9,8 +10,9 @@ class Generic(pg.sprite.Sprite):
     No extra functionality.
     """
 
-    containers = None
-    images = {}
+    containers = (groups.generics, groups.all_sprites)
+
+    images = None
 
     def __init__(
         self,
@@ -18,7 +20,7 @@ class Generic(pg.sprite.Sprite):
         image_size: tuple[int, int] | None = None,
         **rect_kwargs,
     ):
-        super().__init__(self.containers)
+        super().__init__(*self.containers)
         self.image = pg.image.load(image_path).convert_alpha()
         if image_size:
             self.image = pg.transform.scale(self.image, image_size)

@@ -4,11 +4,19 @@ from .tile import InteractTile
 import logging
 from .. import game_events
 from .player import Player
+from .. import groups
 
 logger = logging.getLogger(__name__)
 
 
 class Appliance(InteractTile):
+    containers = (
+        groups.appliances,
+        groups.interact_tiles,
+        groups.kitchen,
+        groups.all_sprites,
+    )
+
     def __init__(
         self,
         tile_type,

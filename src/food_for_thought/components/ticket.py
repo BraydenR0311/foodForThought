@@ -12,6 +12,8 @@ from .tile import TileType
 from dataclasses import dataclass
 from pathlib import Path
 import logging
+from ..utils.image import Image, ImageCollection
+from .. import groups
 
 logger = logging.getLogger(__name__)
 
@@ -36,14 +38,12 @@ class Ticket(pg.sprite.Sprite):
     """Manages QuoteSection and Food objects."""
 
     IMAGE_SIZE = 20
+    containers = (groups.tickets, groups.all_sprites)
 
-    IMAGE_PATHS = {"ticket": config.IMAGE_DIR / "ticket" / "ticket.png"}
-
-    containers = None
-    images = {}
+    images = ImageCollection(Image(config.IMAGE_DIR / "ticket" / "ticket.png"))
 
     def __init__(self, dish_name: str):
-        super().__init__(self.containers)
+        super().__init__(*self.containers)
         self._dish_name = dish_name
         self._quote = Quote()
         self._grid = [[(30, 30), (60, 30)], [(30, 60), (60, 60)], [(30, 90), (60, 90)]]
@@ -60,7 +60,7 @@ class Ticket(pg.sprite.Sprite):
         # Topleft of each sprite.
         self._sprites = pg.sprite.Group()
 
-        self.image = self.images["ticket"]
+        self.image = self.images.get_surface("ticket")
 
         # Position sprite.
         self.rect = self.image.get_rect(midtop=visual_manager.get_screen_rect().midtop)

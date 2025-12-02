@@ -1,18 +1,18 @@
 import pygame as pg
+from .. import groups
+from ..utils.image import Image, ImageCollection
 
 from .. import config
 import math
 
 
 class Popup(pg.sprite.Sprite):
-    IMAGE_PATHS = {"e_hint": config.POPUP_DIR / "e_hint.png"}
-
-    containers = None
-    images = {}
+    containers = (groups.popups, groups.all_sprites)
+    images = ImageCollection(Image(config.POPUP_DIR / "popupBackground.png"))
 
     def __init__(self, center):
-        super().__init__(self.containers)
-        self.image = self.images["e_hint"]
+        super().__init__(*self.containers)
+        self.image = self.images.get_surface("popupBackground")
         self.rect = self.image.get_rect(midbottom=center)
         self.rect.move_ip(0, -25)
 

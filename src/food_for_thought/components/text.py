@@ -6,6 +6,7 @@ import pygame as pg
 from .. import config
 from ..common import QUOTE_DATA
 import logging
+from .. import groups
 
 logger = logging.getLogger(__name__)
 
@@ -13,7 +14,7 @@ logger = logging.getLogger(__name__)
 class Text(pg.sprite.Sprite):
     """Simple text that can be rendered and acts like a sprite."""
 
-    containers = None
+    containers = (groups.texts, groups.all_sprites)
 
     def __init__(
         self,

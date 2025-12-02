@@ -4,6 +4,7 @@ from .. import config
 from .text import Text
 from .generic import Generic
 from ..managers.visualmanager import VisualManager
+from .. import groups
 
 visual_manager = VisualManager()
 
@@ -11,7 +12,7 @@ visual_manager = VisualManager()
 class TypeTimer(Text):
     """Times and keeps track of wrongs."""
 
-    containers = None
+    containers = (groups.texts, groups.all_sprites)
 
     def __init__(
         self,

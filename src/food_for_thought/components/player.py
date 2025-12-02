@@ -7,29 +7,31 @@ from .. import config
 from .ticket import Ticket
 from .tile import InteractTile, TileType
 from .generic import Generic
+from .. import groups
+from ..utils.image import Image, Image, ImageCollection
 
 
 class Player(pg.sprite.Sprite):
-    IMAGE_PATHS = {
-        "up_idle": config.IMAGE_DIR / "chef" / "up_idle.png",
-        "up_walk_1": config.IMAGE_DIR / "chef" / "up_walk_1.png",
-        "up_walk_2": config.IMAGE_DIR / "chef" / "up_walk_2.png",
-        "right_idle": config.IMAGE_DIR / "chef" / "right_idle.png",
-        "right_walk_1": config.IMAGE_DIR / "chef" / "right_walk_1.png",
-        "right_walk_2": config.IMAGE_DIR / "chef" / "right_walk_2.png",
-        "down_idle": config.IMAGE_DIR / "chef" / "down_idle.png",
-        "down_walk_1": config.IMAGE_DIR / "chef" / "down_walk_1.png",
-        "down_walk_2": config.IMAGE_DIR / "chef" / "down_walk_2.png",
-        "left_idle": config.IMAGE_DIR / "chef" / "left_idle.png",
-        "left_walk_1": config.IMAGE_DIR / "chef" / "left_walk_1.png",
-        "left_walk_2": config.IMAGE_DIR / "chef" / "left_walk_2.png",
-        "plate": config.IMAGE_DIR / "chef" / "plate.png",
-    }
+    IMAGE_PATHS = {}
     TILE_TYPE = TileType.player
 
-    images = {}
+    images = ImageCollection(
+        Image(config.IMAGE_DIR / "chef" / "up_idle.png"),
+        Image(config.IMAGE_DIR / "chef" / "up_walk_1.png"),
+        Image(config.IMAGE_DIR / "chef" / "up_walk_2.png"),
+        Image(config.IMAGE_DIR / "chef" / "right_idle.png"),
+        Image(config.IMAGE_DIR / "chef" / "right_walk_1.png"),
+        Image(config.IMAGE_DIR / "chef" / "right_walk_2.png"),
+        Image(config.IMAGE_DIR / "chef" / "down_idle.png"),
+        Image(config.IMAGE_DIR / "chef" / "down_walk_1.png"),
+        Image(config.IMAGE_DIR / "chef" / "down_walk_2.png"),
+        Image(config.IMAGE_DIR / "chef" / "left_idle.png"),
+        Image(config.IMAGE_DIR / "chef" / "left_walk_1.png"),
+        Image(config.IMAGE_DIR / "chef" / "left_walk_2.png"),
+        Image(config.IMAGE_DIR / "chef" / "plate.png"),
+    )
 
-    containers = None
+    containers = (groups.player_group, groups.all_sprites)
 
     ANIM_SPEED = 0.2
     BASE_VELOCITY = 150
@@ -38,12 +40,12 @@ class Player(pg.sprite.Sprite):
     tile_type = TileType.player
 
     def __init__(self, center):
-        super().__init__(self.containers)
+        super().__init__(*self.containers)
         self.index = 0
         self.dx = 0
         self.dy = 0
 
-        self.image = self.images["up_idle"]
+        self.image = self.images.get_surface("up_idle")
         self.rect = self.image.get_rect(center=center)
         self.time = time.time()
         self.center = pg.math.Vector2(*self.rect.center)
@@ -52,28 +54,28 @@ class Player(pg.sprite.Sprite):
 
         self.animations = {
             "walk_up": [
-                self.images["up_walk_1"],
-                self.images["up_idle"],
-                self.images["up_walk_2"],
-                self.images["up_idle"],
+                self.images.get_surface("up_walk_1"),
+                self.images.get_surface("up_idle"),
+                self.images.get_surface("up_walk_2"),
+                self.images.get_surface("up_idle"),
             ],
             "walk_right": [
-                self.images["right_walk_1"],
-                self.images["right_idle"],
-                self.images["right_walk_2"],
-                self.images["right_idle"],
+                self.images.get_surface("right_walk_1"),
+                self.images.get_surface("right_idle"),
+                self.images.get_surface("right_walk_2"),
+                self.images.get_surface("right_idle"),
             ],
             "walk_down": [
-                self.images["down_walk_1"],
-                self.images["down_idle"],
-                self.images["down_walk_2"],
-                self.images["down_idle"],
+                self.images.get_surface("down_walk_1"),
+                self.images.get_surface("down_idle"),
+                self.images.get_surface("down_walk_2"),
+                self.images.get_surface("down_idle"),
             ],
             "walk_left": [
-                self.images["left_walk_1"],
-                self.images["left_idle"],
-                self.images["left_walk_2"],
-                self.images["left_idle"],
+                self.images.get_surface("left_walk_1"),
+                self.images.get_surface("left_idle"),
+                self.images.get_surface("left_walk_2"),
+                self.images.get_surface("left_idle"),
             ],
         }
 

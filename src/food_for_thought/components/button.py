@@ -2,23 +2,23 @@ import pygame as pg
 
 from .. import config
 from ..managers.audiomanager import AudioManager
+from .. import groups
+from ..utils.image import Image, ImageCollection
 
 audio_manager = AudioManager()
 
 
 class Button(pg.sprite.Sprite):
-    IMAGE_PATHS = {
-        "play": config.IMAGE_DIR / "buttons" / "play.png",
-        "quit": config.IMAGE_DIR / "buttons" / "quit.png",
-    }
-
-    containers = None
-    images = {}
+    containers = (groups.buttons, groups.all_sprites)
+    images = ImageCollection(
+        Image(config.IMAGE_DIR / "buttons" / "play.png"),
+        Image(config.IMAGE_DIR / "buttons" / "quit.png"),
+    )
 
     def __init__(self, kind: str, center_loc: tuple[int, int]):
-        super().__init__(self.containers)
+        super().__init__(*self.containers)
         self.kind = kind
-        self.image = self.images[self.kind]
+        self.image = self.images.get_surface(kind)
         self.rect = self.image.get_rect()
         self.rect.center = center_loc
         self.clicked = False
@@ -65,7 +65,7 @@ class Button(pg.sprite.Sprite):
         self.image = pg.transform.hsl(self.image, lightness=-0.2)
 
     def unarm(self):
-        self.image = self.images[self.kind]
+        self.image = self.images.get_surface(self.kind)
 
     def click(self):
         self.image = pg.transform.hsl(self.image, lightness=-0.3)

@@ -2,7 +2,7 @@ import pygame as pg
 
 from .text import Text
 from ..managers.visualmanager import VisualManager
-
+from .. import groups
 
 visual_manager = VisualManager()
 
@@ -11,7 +11,7 @@ class LevelClock(Text):
     """Manages 9 to 5 shift. Records time and updates on-screen clock."""
 
     SECS_IN_HOUR = 15
-    containers = None
+    containers = (groups.texts, groups.all_sprites)
 
     def __init__(self):
         # Working day starts at 9 AM.

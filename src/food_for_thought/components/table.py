@@ -6,11 +6,18 @@ from .tile import InteractTile, TileType
 from .menu import MENU
 from .. import game_events
 import logging
+from .. import groups
 
 logger = logging.getLogger(__name__)
 
 
 class Table(InteractTile):
+    containers = (
+        groups.tables,
+        groups.interact_tiles,
+        groups.kitchen,
+        groups.all_sprites,
+    )
     # Increased by one when a table wants to order.
     # Decreased by one when a table gets their order.
 
