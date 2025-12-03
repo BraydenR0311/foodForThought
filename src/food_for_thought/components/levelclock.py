@@ -3,6 +3,9 @@ import pygame as pg
 from .text import Text
 from ..managers.visualmanager import VisualManager
 from .. import groups
+import logging
+
+logger = logging.getLogger()
 
 visual_manager = VisualManager()
 
@@ -15,8 +18,7 @@ class LevelClock(Text):
 
     def __init__(self):
         # Working day starts at 9 AM.
-        self.text = "9:00"
-        super().__init__(self.text, 20, "black")
+        super().__init__("Time: 9:00", 20, "black")
         self.hour = 9
         self.tick = False  # The clock is currently changing.
         self.start_time = pg.time.get_ticks()
@@ -25,6 +27,7 @@ class LevelClock(Text):
         self.has_been_paused = False
 
     def update(self, *args, **kwargs):
+        super().update(*args, **kwargs)
         self.update_text()
 
     def start(self):
@@ -44,10 +47,13 @@ class LevelClock(Text):
         if self.hour > 12:
             self.hour -= 12
         if (secs % self.SECS_IN_HOUR == 0) and secs > 0 and not self.tick:
-            self.tick = not self.tick
+            self.tick = True
             self.hour += 1
+            self._content = "Time: " + str(self.hour) + ":00"
+            logger.debug("levelclock text: %s", self._content)
+
         if (not secs % self.SECS_IN_HOUR == 0) and self.tick:
-            self.tick = not self.tick
-        self.text = str(self.hour) + ":00"
+            self.tick = False
         # When text, make sure it's positioned correctly.
+        self.rect = self.image.get_rect()
         self.rect.topright = visual_manager.get_screen_rect().topright

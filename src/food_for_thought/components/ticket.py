@@ -136,7 +136,7 @@ class Ticket(pg.sprite.Sprite):
         return self._dish_name
 
     def get_score(self) -> int:
-        return sum(ingr.get_state() == FoodState.COOKED for ingr in self._ingredients)
+        return self._num_correct
 
     @override
     def kill(self) -> None:

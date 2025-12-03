@@ -33,33 +33,37 @@ class Table(InteractTile):
         # Order has been taken. Still technically 'waiting'.
         self._order_taken = False
         self._order_start = 0
-        self._popup = None
 
     def update(self, elapsed, *args, **kwargs):
-        pass
+        if self._order_taken and not self._popup.alive():
+            self.show_popup("waiting")
 
     def interact(self, player):
         """When player interacts, if order is ready, give player the
         order name.
         """
+        logger.debug("interacted")
         # No order decided yet.
         if not self._decided_dish_name:
             return
 
-        # Player already has a ticket.
-        if player.has_ticket():
+        # Player already has a ticket and we haven't ordered yet.
+        if player.has_ticket() and not self._order_taken:
             return
         # Has decided a dish. Player will take order now.
         if not self._order_taken:
             player.take_order(self._decided_dish_name)
             self._order_taken = True
-            self.unshow_interaction_popup()
+            self.unshow_popup()
             return
 
         finished_ticket_dish_name = player.get_finished_dish_name()
+        logger.debug(finished_ticket_dish_name)
         if not finished_ticket_dish_name:
             return
         if self._decided_dish_name == finished_ticket_dish_name:
+            logger.debug("received order!")
+            logger.debug(player.get_ticket().get_score())
             self._receive_order()
 
     def decide_order(self):
@@ -67,7 +71,7 @@ class Table(InteractTile):
             return
         self._decided_dish_name = random.choice(list(MENU.keys()))
         logger.debug("Decided dish: %s", self._decided_dish_name)
-        self.show_interaction_popup()
+        self.show_popup("ready")
 
     def can_order(self) -> bool:
         return not self._decided_dish_name
@@ -75,4 +79,5 @@ class Table(InteractTile):
     def _receive_order(self):
         self._decided_dish_name = ""
         self._order_taken = False
+        self.unshow_popup()
         pg.event.post(pg.event.Event(game_events.TABLE_RECEIVE_DISH, {"table": self}))

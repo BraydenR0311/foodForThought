@@ -19,7 +19,7 @@ from ..managers.audiomanager import AudioManager
 from ..managers.tablemanager import TableManager
 from .. import game_events
 from pathlib import Path
-
+from ..components.score import Score
 
 import logging
 
@@ -42,8 +42,7 @@ def read_tilemap(fp: Path) -> pg.Rect:
             gridwidth // 2 * config.TILESIZE
         )
         toplefty = (
-            visual_manager.get_screen_rect().centery
-            - (gridwidth // 2 * config.TILESIZE),
+            visual_manager.get_screen_rect().centery - (gridwidth // 2 * config.TILESIZE),
         )
     else:  # Grid has odd number of tiles.
         topleftx = (
@@ -101,6 +100,7 @@ class Level(GameState):
         )
         self.level_clock = LevelClock()
         self.player: Player = groups.player_group.sprite
+        self.score = Score()
 
     @override
     def _enter(self):
@@ -116,11 +116,14 @@ class Level(GameState):
         dt = self.data["dt"]
 
         e_press = False
+
+        keys = pg.key.get_pressed()
+        player = self.player
+
         for event in events:
             if event.type == pg.KEYDOWN and event.key == pg.K_e:
                 e_press = True
-            elif event.type == game_events.TABLE_RECEIVE_DISH:
-                pass
+
             elif event.type == game_events.APPLIANCE_COOK:
                 logger.debug(
                     "Cooking %s (%s) on %s",
@@ -138,10 +141,15 @@ class Level(GameState):
                     },
                 )
             elif event.type == game_events.TABLE_RECEIVE_DISH:
+                table = event.table
+                ticket = player.pop_ticket()
                 logger.debug("Dish received.")
 
-        keys = pg.key.get_pressed()
-        player = self.player
+        if self.level_clock.hour >= 5:
+            gamestate_manager.goto(
+                StateKey.GAME_OVER, {"score": self.score}, teardown=True
+            )
+            return
 
         # Directional Keybindings
         up = keys[pg.K_w]
@@ -206,8 +214,8 @@ class Level(GameState):
             groups.tickets,
             groups.foods,
             groups.statuses,
-            groups.generics,
             groups.popups,
+            groups.generics,
             groups.texts,
         )
 

@@ -7,3 +7,4 @@ class StateKey(Enum):
     PAUSED = auto()
     COOK = auto()
     INITIALIZING_ROUND = auto()
+    GAME_OVER = auto()

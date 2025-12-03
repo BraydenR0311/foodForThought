@@ -8,8 +8,8 @@
    version="1.1"
    id="svg1"
    inkscape:version="1.4.2 (ebf0e940d0, 2025-05-08)"
-   sodipodi:docname="e.svg"
-   inkscape:export-filename="popupBackground.png"
+   sodipodi:docname="ready.svg"
+   inkscape:export-filename="ready.png"
    inkscape:export-xdpi="96"
    inkscape:export-ydpi="96"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
@@ -41,23 +41,16 @@
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1" />
-  <rect
-     style="fill:none;stroke:#000000;stroke-width:1.7758;stroke-dasharray:none;stroke-opacity:1"
-     id="rect1"
-     width="18.067951"
-     height="18.067951"
-     x="0.88789916"
-     y="0.88789916"
-     ry="2.2959275" />
   <text
      xml:space="preserve"
-     style="font-size:18.834px;text-align:start;writing-mode:lr-tb;direction:ltr;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:4.7085;stroke-dasharray:none;stroke-opacity:1"
-     x="4.3375902"
-     y="16.64562"
-     id="text1"><tspan
+     style="font-size:6.77033px;text-align:start;writing-mode:lr-tb;direction:ltr;text-anchor:start;fill:#000000;stroke-width:0.564192"
+     x="-4.2769332"
+     y="14.932061"
+     id="text1"
+     transform="rotate(-18.156581)"><tspan
        sodipodi:role="line"
        id="tspan1"
-       style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:4.7085"
-       x="4.3375902"
-       y="16.64562">E</tspan></text>
+       style="font-style:italic;stroke-width:0.564192"
+       x="-4.2769332"
+       y="14.932061">READY!</tspan></text>
 </svg>

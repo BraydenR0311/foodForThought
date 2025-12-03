@@ -72,7 +72,7 @@ class InteractTile(Tile):
         super().__init__(tile_type, rect)
         # Define the allowable area for player interaction.
         self._interaction_rect = self.rect.inflate(70, 70)
-        self.popup = None
+        self._popup = None
         self.center = pg.math.Vector2(*self.rect.center)
 
     def update(self, *args, **kwargs): ...
@@ -83,9 +83,11 @@ class InteractTile(Tile):
         """Return the area where the user can interact."""
         return self._interaction_rect
 
-    def show_interaction_popup(self):
-        self.popup = Popup(self.rect.center)
+    def show_popup(self, symbol: str):
+        if self._popup:
+            self._popup.kill()
+        self._popup = Popup(self.rect.center, symbol)
 
-    def unshow_interaction_popup(self):
-        if self.popup is not None:
-            self.popup.kill()
+    def unshow_popup(self):
+        if self._popup is not None:
+            self._popup.kill()

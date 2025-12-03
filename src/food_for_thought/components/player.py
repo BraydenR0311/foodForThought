@@ -9,6 +9,9 @@ from .tile import InteractTile, TileType
 from .generic import Generic
 from .. import groups
 from ..utils.image import Image, Image, ImageCollection
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class Player(pg.sprite.Sprite):
@@ -124,14 +127,19 @@ class Player(pg.sprite.Sprite):
 
     def get_finished_dish_name(self) -> str | None:
         """Return dish name if ticket is done. If not, return None."""
-        if not self._ticket or self._ticket.is_done():
+        if not self._ticket or not self._ticket.is_done():
             return None
 
-        self._ticket.kill()
         dish_name = self._ticket.get_dish_name()
-        self._ticket = None
         self._unhold_plate()
         return dish_name
+
+    def pop_ticket(self):
+        logger.debug("Dropping ticket.")
+        self._ticket.kill()
+        ticket = self._ticket
+        self._ticket = None
+        return ticket
 
     def get_dish_name(self) -> str | None:
         if not self._ticket:
