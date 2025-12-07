@@ -29,7 +29,7 @@ class Appliance(InteractTile):
         if not ticket:
             return
 
-        if not (cook_ingredient := ticket.get_cookable(self.tile_type)):
+        if not (cook_ingredient := ticket.get_cookable()):
             return
 
         if not cook_ingredient.metadata.appliance == self.tile_type:
