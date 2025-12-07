@@ -30,7 +30,7 @@ class GameOver(GameState):
     @override
     def _setup(self):
         score = self.data["score"]
-        self.score_text = Text(f"you made ${score:.2f}! Wow!", 50)
+        self.score_text = Text(f"you made ${score.get_value():.2f}! Wow!", 50)
         self.score_text.rect.center = visual_manager.get_screen_rect().center
 
         self.space_text = Text("(Press Space to return to main menu)", 30)
@@ -44,6 +44,8 @@ class GameOver(GameState):
         for event in events:
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
                 gamestate_manager.goto(StateKey.MAIN_MENU, teardown=True)
+
+        self._draw()
 
     @override
     def _update(self):

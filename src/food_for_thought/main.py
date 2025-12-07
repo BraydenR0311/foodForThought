@@ -24,6 +24,7 @@ from .managers.gamestatemanager import GameStateManager
 from .gamestates.mainmenu import MainMenu
 from .gamestates.level import Level
 from .gamestates.cook import Cook
+from .gamestates.gameover import GameOver
 import sys
 import logging
 
@@ -51,11 +52,7 @@ audio_manager = AudioManager()
 gamestate_manager = GameStateManager()
 
 # Instantiate gamestates with their keys.
-gamestates = (
-    MainMenu(),
-    Level(),
-    Cook(),
-)
+gamestates = (MainMenu(), Level(), Cook(), GameOver())
 
 # Register Gamestate.
 gamestate_manager.register_gamestate(*gamestates)
