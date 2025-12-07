@@ -12,6 +12,7 @@ from ..components.levelclock import LevelClock
 from ..managers.gamestatemanager import GameStateManager
 from ..managers.visualmanager import VisualManager
 from ..managers.audiomanager import AudioManager
+from ..managers.tablemanager import TableManager
 import logging
 
 logger = logging.getLogger(__name__)
@@ -30,6 +31,7 @@ class Cook(GameState):
         self.level_clock: LevelClock = self.data["level_clock"]
         self.ticket: Ticket = self.data["ticket"]
         self.cook_ingredient: TicketIngredient = self.data["cook_ingredient"]
+        self.table_manager: TableManager = self.data["table_manager"]
         self.quote_chunk = self.ticket.pop()
         if not self.quote_chunk:
             logger.error("No quote. This shouldn't be happening. returning to level")
@@ -68,6 +70,10 @@ class Cook(GameState):
         self.typeui.update(self.level_clock.get_elapsed())
         self.level_clock.update()
         groups.tables.update(self.level_clock.get_elapsed())
+        groups.popups.update(self.level_clock.get_elapsed())
+        groups.texts.update(self.level_clock.get_elapsed(), self.data["dt"])
+
+        self.table_manager.update(self.level_clock.get_elapsed())
 
     @override
     def _draw(self):
