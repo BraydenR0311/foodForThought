@@ -3,6 +3,10 @@ from typing import TYPE_CHECKING, Any
 import pygame as pg
 
 from .. import config
+import logging
+import sys
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from ..gamestates.gamestate import GameState
@@ -42,9 +46,7 @@ class GameStateManager:
     def quit(self):
         self._running = False
 
-    def goto(
-        self, statekey, data: dict[str, Any] | None = None, teardown=False
-    ) -> None:
+    def goto(self, statekey, data: dict[str, Any] | None = None, teardown=False) -> None:
         current_state = self.get_current_state()
         current_state.exit(teardown)
 
@@ -57,7 +59,12 @@ class GameStateManager:
         new_state.enter()
 
     def get_current_state(self) -> "GameState":
-        return self._gamestates[self._current_statekey]
+        try:
+            gs = self._gamestates[self._current_statekey]
+        except KeyError:
+            logger.error("Cannot find gamestate. Maybe it isn't registered yet.")
+            sys.exit(1)
+        return gs
 
     def run(self):
         dt = self.clock.tick(config.FPS) / 1000
