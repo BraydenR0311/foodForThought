@@ -8,7 +8,7 @@ from .text import Quote, Text
 from .generic import Generic
 from enum import Enum, auto
 from ..managers.visualmanager import VisualManager
-from .tile import TileType
+from .tile import TileType, Tile
 from dataclasses import dataclass
 from pathlib import Path
 import logging
@@ -30,6 +30,7 @@ class FoodState(Enum):
 class TicketIngredient:
     metadata: Ingredient
     food_coordinate: tuple[int, int]
+    appliance_coordinate: tuple[int, int]
     status_coordinate: tuple[int, int]
     prepared: bool = False
 
@@ -46,15 +47,21 @@ class Ticket(pg.sprite.Sprite):
         super().__init__(*self.containers)
         self._dish_name = dish_name
         self._quote = Quote()
-        self._grid = [[(30, 30), (60, 30)], [(30, 60), (60, 60)], [(30, 90), (60, 90)]]
+        self._grid = [
+            [(30, 30), (60, 30), (90, 30)],
+            [(30, 60), (60, 60), (90, 60)],
+            [(30, 90), (60, 90), (90, 90)],
+        ]
         self._ingredients = [
             TicketIngredient(
                 ingredient,
                 food_coordinate=self._grid[i][0],
-                status_coordinate=self._grid[i][1],
+                appliance_coordinate=self._grid[i][1],
+                status_coordinate=self._grid[i][2],
             )
             for i, ingredient in enumerate(MENU[self._dish_name].ingredients)
         ]
+
         self._num_wrong = 0
         self._num_correct = 0
         # Topleft of each sprite.
@@ -83,21 +90,32 @@ class Ticket(pg.sprite.Sprite):
                     topleft=self.rect.move(ingredient.food_coordinate).topleft,
                 )
             )
+            self._sprites.add(
+                Generic(
+                    config.TILE_DIR
+                    / f"{Tile.tile_type_to_image_name[ingredient.metadata.appliance]}.png",
+                    (self.IMAGE_SIZE, self.IMAGE_SIZE),
+                    topleft=self.rect.move(ingredient.appliance_coordinate).topleft,
+                )
+            )
 
         # Text object that is used on the ticket.
         self._sprites.add(
             Text(
-                self._dish_name,
+                MENU[self._dish_name].name,
                 8,
                 "black",
-                bottomleft=self.rect.move(10, -10).bottomleft,
+                midbottom=self.rect.move(0, -12).midbottom,
             )
         )
+
+        self._current_quote_section = None
+        self._quote_section_sprites = []
 
     def update(self, *args, **kwargs):
         pass
 
-    def get_cookable(self, tile_type: TileType) -> TicketIngredient | None:
+    def get_cookable(self) -> TicketIngredient | None:
         return next(
             (ingredient for ingredient in self._ingredients if not ingredient.prepared),
             None,
@@ -133,9 +151,19 @@ class Ticket(pg.sprite.Sprite):
             )
         )
         ingredient.prepared = True
+        self._quote_section_sprites.append(
+            Text(
+                self._current_quote_section,
+                10,
+                topleft=self._author_image.rect.move(
+                    0, len(self._quote_section_sprites) * 10 + 50
+                ).bottomleft,
+            )
+        )
 
     def pop(self):
-        return self._quote.pop()
+        self._current_quote_section = self._quote.pop()
+        return self._current_quote_section
 
     def is_done(self) -> bool:
         return not bool(len(self._quote))
@@ -152,3 +180,7 @@ class Ticket(pg.sprite.Sprite):
         super().kill()
         for sprite in self._sprites.sprites():
             sprite.kill()
+        for sprite in self._quote_section_sprites:
+            sprite.kill()
+        self._author_image.kill()
+        self._author_name.kill()
