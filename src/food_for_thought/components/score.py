@@ -2,7 +2,7 @@ import pygame as pg
 
 from .text import Text
 from ..managers.visualmanager import VisualManager
-
+import random
 
 import logging
 
@@ -21,10 +21,18 @@ class Score(Text):
         self._content = self.get_text()
         self.rect.topright = visual_manager.get_screen_rect().topright
         self.rect.move_ip(0, 30)
-        logger.debug(self.rect)
 
     def get_text(self):
         return f"Money made: ${self._value:.2f}"
 
-    def increase(self, amount: float):
-        self._value += amount
+    def get_value(self):
+        return self._value
+
+    def increase_random(self, value: int):
+        if value == 0:
+            return 0.0
+        direction = random.choice([-1, 1])
+        magnitude = random.random()
+        earnings = value + direction * magnitude
+        self._value += earnings
+        return earnings
