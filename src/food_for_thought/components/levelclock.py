@@ -20,6 +20,7 @@ class LevelClock(Text):
         # Working day starts at 9 AM.
         super().__init__("Time: 9:00", 20, "black")
         self.hour = 9
+        self.is_pm = False
         self.tick = False  # The clock is currently changing.
         self.start_time = pg.time.get_ticks()
         self.paused_elapsed = 0
@@ -44,11 +45,14 @@ class LevelClock(Text):
 
     def update_text(self):
         secs = self.get_elapsed() // 1000
-        if self.hour > 12:
-            self.hour -= 12
+
         if (secs % self.SECS_IN_HOUR == 0) and secs > 0 and not self.tick:
             self.tick = True
             self.hour += 1
+            if self.hour > 12:
+                if not self.is_pm:
+                    self.is_pm = True
+                self.hour -= 12
             self._content = "Time: " + str(self.hour) + ":00"
             logger.debug("levelclock text: %s", self._content)
 
