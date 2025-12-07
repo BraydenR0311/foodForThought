@@ -18,10 +18,12 @@ audio_manager = AudioManager()
 class TileType(Enum):
     oven = "o"
     cutting_board = "c"
+    pot = "p"
+    grill = "g"
     fryer = "f"
     table = "t"
     floor = "#"
-    player = "p"
+    player = "*"
 
 
 # Only inherited from.
@@ -32,6 +34,8 @@ class Tile(pg.sprite.Sprite, ABC):
         TileType.oven: "oven",
         TileType.cutting_board: "cutting",
         TileType.table: "table",
+        TileType.pot: "pot",
+        TileType.grill: "grill",
     }
 
     containers = []
@@ -41,6 +45,8 @@ class Tile(pg.sprite.Sprite, ABC):
         Image(config.TILE_DIR / "oven.png"),
         Image(config.TILE_DIR / "cutting.png"),
         Image(config.TILE_DIR / "table.png"),
+        Image(config.TILE_DIR / "pot.png"),
+        Image(config.TILE_DIR / "grill.png"),
     )
 
     def __init__(self, tile_type: TileType, rect: pg.Rect):
