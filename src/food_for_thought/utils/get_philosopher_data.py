@@ -33,6 +33,10 @@ while data:
     # Strip the fist '/' so we can concatenate to ROOT_URL later.
     image = author_data["images"]["faceImages"]["face250x250"].lstrip("/")
 
+    # Quote skipped of number of characters exceeds this.
+    if len(quote) > 250:
+        continue
+
     quotes.append({"author": author, "id": author_id, "quote": quote, "image": image})
 
     print(quotes[-1])
