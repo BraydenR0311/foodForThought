@@ -66,6 +66,14 @@ class Ticket(pg.sprite.Sprite):
         self.rect = self.image.get_rect(midtop=visual_manager.get_screen_rect().midtop)
         self.rect.move_ip(0, 10)
 
+        self._author_image = self._quote.show_author_image(
+            (300, 300), topleft=visual_manager.get_screen_rect().move(30, 30).topleft
+        )
+
+        self._author_name = Text(
+            self._quote._author, 10, midtop=self._author_image.rect.move(0, 10).midbottom
+        )
+
         # Display food.
         for ingredient in self._ingredients:
             self._sprites.add(

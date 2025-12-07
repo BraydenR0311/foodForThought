@@ -9,6 +9,7 @@ FOOD_DIR = IMAGE_DIR / "food"
 TILE_DIR = IMAGE_DIR / "tiles"
 POPUP_DIR = IMAGE_DIR / "popups"
 TICKET_DIR = IMAGE_DIR / "ticket"
+FACES_DIR = IMAGE_DIR / "faces"
 
 AUDIO_DIR = ASSET_DIR / "audio"
 MUSIC_DIR = AUDIO_DIR / "music"
