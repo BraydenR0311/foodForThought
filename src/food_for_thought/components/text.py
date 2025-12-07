@@ -7,6 +7,7 @@ from .. import config
 from ..common import QUOTE_DATA
 import logging
 from .. import groups
+from .generic import Generic
 
 logger = logging.getLogger(__name__)
 
@@ -69,6 +70,7 @@ class Quote:
         self._author = data["author"]
         self._lastname = self._author.split(" ")[-1]
         self._content = data["quote"].replace("\n", " ")
+        self._image_path = config.FACES_DIR / f"{data['id']}.jpg"
 
         self._chunks = self._split_quote(self._content)
 
@@ -78,6 +80,9 @@ class Quote:
     def get_content(self) -> str:
         """Returns the entire quote, regardless if any have been popped."""
         return self._content
+
+    def show_author_image(self, size, **rect_kwargs):
+        return Generic(self._image_path, size, **rect_kwargs)
 
     def pop(self) -> str | None:
         """Pop the first quote part. Returns None if empty."""
