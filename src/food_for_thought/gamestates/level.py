@@ -20,6 +20,7 @@ from ..managers.tablemanager import TableManager
 from .. import game_events
 from pathlib import Path
 from ..components.score import Score
+from ..components.scorepopup import ScorePopup
 
 import logging
 
@@ -29,7 +30,6 @@ logger = logging.getLogger(__name__)
 gamestate_manager = GameStateManager()
 visual_manager = VisualManager()
 audio_manager = AudioManager()
-table_manager = TableManager()
 
 
 def read_tilemap(fp: Path) -> pg.Rect:
@@ -79,6 +79,10 @@ def read_tilemap(fp: Path) -> pg.Rect:
                     Appliance(TileType.cutting_board, rect)
                 case TileType.fryer.value:
                     Appliance(TileType.fryer, rect)
+                case TileType.pot.value:
+                    Appliance(TileType.pot, rect)
+                case TileType.grill.value:
+                    Appliance(TileType.grill, rect)
                 case _:
                     logger.error("Unknown TileType: '%s'", tile)
 
@@ -101,6 +105,7 @@ class Level(GameState):
         self.level_clock = LevelClock()
         self.player: Player = groups.player_group.sprite
         self.score = Score()
+        self.table_manager = TableManager()
 
     @override
     def _enter(self):
@@ -138,14 +143,20 @@ class Level(GameState):
                         "appliance": event.appliance,
                         "level_clock": self.level_clock,
                         "cook_ingredient": event.cook_ingredient,
+                        "table_manager": self.table_manager,
                     },
                 )
             elif event.type == game_events.TABLE_RECEIVE_DISH:
                 table = event.table
                 ticket = player.pop_ticket()
                 logger.debug("Dish received.")
+                if ticket:
+                    logger.debug(ticket.get_score())
+                earnings = self.score.increase_random(ticket.get_score())
+                logger.debug("%.2f", earnings)
+                ScorePopup(earnings, table)
 
-        if self.level_clock.hour >= 5:
+        if self.level_clock.hour >= 5 and self.level_clock.is_pm:
             gamestate_manager.goto(
                 StateKey.GAME_OVER, {"score": self.score}, teardown=True
             )
@@ -203,7 +214,7 @@ class Level(GameState):
     @override
     def _update(self):
         groups.all_sprites.update(self.level_clock.get_elapsed(), self.data["dt"])
-        table_manager.update(self.level_clock.get_elapsed())
+        self.table_manager.update(self.level_clock.get_elapsed())
 
     @override
     def _draw(self):
