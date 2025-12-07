@@ -27,6 +27,7 @@ class AudioManager:
             "chop": pg.mixer.Sound(SOUND_DIR / "chop.ogg"),
             "click_up": pg.mixer.Sound(SOUND_DIR / "click_up.opus"),
             "click_down": pg.mixer.Sound(SOUND_DIR / "click_down.opus"),
+            "cash_register": pg.mixer.Sound(SOUND_DIR / "cash_register.opus"),
         }
 
     def play_music(self):
