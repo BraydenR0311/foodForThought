@@ -9,22 +9,15 @@ class TableManager:
     _instance = None
     _initialized = False
 
-    INCREASE_TIME = 4000
+    INCREASE_TIME = 2000
 
-    INITIAL_MIN_DECIDING_TIME = 1000
-    INITIAL_MAX_DECIDING_TIME = 5000
+    INITIAL_MIN_DECIDING_TIME = 500
+    INITIAL_MAX_DECIDING_TIME = 2500
 
     # Will leave at this time.
     TIME_BEFORE_LEAVE = 60000
 
-    def __new__(cls):
-        if not cls._instance:
-            cls._instance = super().__new__(cls)
-        return cls._instance
-
     def __init__(self):
-        if TableManager._initialized:
-            return
         self._next_order_time = 0.0
 
     def update(self, level_elapsed):
@@ -74,6 +67,4 @@ class TableManager:
 
     def _get_num_waiting(self) -> int:
         """Return number of tables waiting for food."""
-        return len(
-            [table for table in groups.tables.sprites() if not table.can_order()]
-        )
+        return len([table for table in groups.tables.sprites() if not table.can_order()])
