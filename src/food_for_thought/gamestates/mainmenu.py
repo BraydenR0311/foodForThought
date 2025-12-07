@@ -3,6 +3,7 @@ import pygame as pg
 
 from .. import groups
 from ..components.button import Button
+from ..components.text import Text
 from .gamestate import GameState
 from .statekey import StateKey
 from ..managers.visualmanager import VisualManager
@@ -21,6 +22,11 @@ class MainMenu(GameState):
     def _setup(self):
         self.play_button = Button("play", visual_manager.get_screen_rect().center)
         self.quit_button = Button("quit", visual_manager.get_screen_rect().center)
+        self.text = Text(
+            "Food For Thought",
+            50,
+            midtop=visual_manager.get_screen_rect().move(0, 75).midtop,
+        )
 
         self.play_button.rect.move_ip(0, -100)
         self.quit_button.rect.move_ip(0, 100)
@@ -44,6 +50,7 @@ class MainMenu(GameState):
     def _draw(self):
         visual_manager.draw_background()
         groups.buttons.draw(visual_manager.get_screen())
+        groups.texts.draw(visual_manager.get_screen())
 
     def _teardown(self):
         for sprite in groups.all_sprites:
