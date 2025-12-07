@@ -15,26 +15,53 @@ class Ingredient:
 class Dish:
     name: str
     ingredients: list[Ingredient]
-    image_path: Path
+
+
+BEEF = Ingredient("beef", TileType.grill, FOOD_DIR / "beef.png")
+TOMATO = Ingredient("tomato", TileType.cutting_board, FOOD_DIR / "tomato.png")
+CHEESE = Ingredient("cheese", TileType.cutting_board, FOOD_DIR / "cheese.png")
+LETTUCE = Ingredient("lettuce", TileType.cutting_board, FOOD_DIR / "lettuce.png")
+NOODLES = Ingredient("noodles", TileType.pot, FOOD_DIR / "noodles.png")
+HAM = Ingredient("ham", TileType.grill, FOOD_DIR / "ham.png")
+BREAD = Ingredient("bread", TileType.cutting_board, FOOD_DIR / "bread.png")
+EGG = Ingredient("egg", TileType.grill, FOOD_DIR / "egg.png")
+POTATO = Ingredient("potato", TileType.cutting_board, FOOD_DIR / "potato.png")
+FRIES = Ingredient("fries", TileType.fryer, FOOD_DIR / "fries.png")
+FRIED_FISH = Ingredient("fried_fish", TileType.fryer, FOOD_DIR / "fish.png")
+BAKED_FISH = Ingredient("baked_fish", TileType.oven, FOOD_DIR / "fish.png")
 
 
 MENU = {
     "burger": Dish(
-        "burger",
-        [
-            Ingredient("bun", TileType.cutting_board, FOOD_DIR / "bun.png"),
-            Ingredient("patty", TileType.oven, FOOD_DIR / "patty.png"),
-            Ingredient("cheese", TileType.cutting_board, FOOD_DIR / "cheese.png"),
-        ],
-        FOOD_DIR / "burger.png",
+        "Burger",
+        [BEEF, TOMATO, CHEESE],
     ),
-    "taco": Dish(
-        "taco",
-        [
-            Ingredient("shell", TileType.cutting_board, FOOD_DIR / "shell.png"),
-            Ingredient("tomato", TileType.cutting_board, FOOD_DIR / "tomato.png"),
-            Ingredient("beef", TileType.oven, FOOD_DIR / "beef.png"),
-        ],
-        FOOD_DIR / "taco.png",
+    "beef_taco": Dish(
+        "Beef Taco",
+        [BEEF, TOMATO, LETTUCE],
+    ),
+    "fish_taco": Dish(
+        "Fish Taco",
+        [BAKED_FISH, TOMATO, LETTUCE],
+    ),
+    "ham_sandwich": Dish(
+        "Ham Sandwich",
+        [BREAD, HAM, CHEESE],
+    ),
+    "spaghetti": Dish(
+        "Spaghetti",
+        [NOODLES, TOMATO, BEEF],
+    ),
+    "breakfast_sandwich": Dish(
+        "Breakfast Sandwich",
+        [BREAD, EGG, CHEESE],
+    ),
+    "ramen": Dish(
+        "Ramen",
+        [NOODLES, HAM, EGG],
+    ),
+    "fish_and_chips": Dish(
+        "Fish and Chips",
+        [POTATO, FRIES, FRIED_FISH],
     ),
 }
